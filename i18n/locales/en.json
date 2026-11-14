@@ -3,7 +3,8 @@
     "today": "Today", "tomorrow": "Tomorrow", "yesterday": "Yesterday",
     "save": "Save", "cancel": "Cancel", "delete": "Delete", "close": "Close", "back": "Back",
     "done": "Done", "edit": "Edit", "add": "Add", "remove": "Remove", "ok": "OK",
-    "min": "{n} min", "sessions": "1 session | {n} sessions", "never": "never"
+    "min": "{n} min", "sessions": "1 session | {n} sessions", "never": "never",
+    "undo": "Undo"
   },
   "dur": { "h": "{n}h", "m": "{n}m" },
   "box": { "1": "Do now", "2": "Schedule", "3": "Limit", "4": "Drop", "n": "Box {n}", "pick": "Which box?" },
@@ -35,6 +36,8 @@
     "noTop3Body": "Pick up to three tasks that matter most today. Everything else can wait.",
     "pickFromPlan": "Pick from Plan",
     "addTask": "Add a task",
+    "doneToast": "Done: {title}",
+    "routinesDone": "All habits done today",
     "sortInbox": "Sort inbox ({n})",
     "emptyStart": "Nothing here yet. Add your first task below.",
     "allDoneTitle": "Top {top} done",

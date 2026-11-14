@@ -3,12 +3,14 @@ import type { Task } from '~/types'
 
 // Today (/today): one list for the Top tasks and one for habits, with the same row everywhere:
 // tick to finish, tap the title to open it, ▶ to start a focus session. The first unfinished Top task gets the
-// solid ▶ (that's "up next"). A running session shows a card to go back to it.
+// solid ▶ (that's "up next"). Finished items leave the list (a toast offers Undo); the counters keep the score.
+// A running session shows a card to go back to it.
 const { t } = useI18n()
 const topN = useTopN()
 const fmt = useFmt()
 const { active: profile } = useProfile()
 const { sheets, openSort, openTask, openCapture } = useSheets()
+const toast = useToast()
 const { top3, inbox, active: planTasks, routinesToday, routineDone, streakOf, setDone, toggleRoutine, loaded } = useTasks()
 const { next: nextReminder, todayCount } = useReminders()
 const { focus, remainingMs, start } = useFocus()
@@ -18,7 +20,9 @@ const { data: unread } = useLiveQuery(db => db.notifications.filter(n => !n.read
 const upNext = computed(() => top3.value.find(x => x.status !== 'done') || null)
 const doneCount = computed(() => top3.value.filter(x => x.status === 'done').length)
 const allDone = computed(() => top3.value.length > 0 && doneCount.value === top3.value.length)
-const routinesDone = computed(() => routinesToday.value.filter(r => routineDone(r)).length)
+const openTop = computed(() => top3.value.filter(x => x.status !== 'done'))
+const openRoutines = computed(() => routinesToday.value.filter(r => !routineDone(r)))
+const routinesDone = computed(() => routinesToday.value.length - openRoutines.value.length)
 const focusOnBreak = computed(() => focus.value?.phase === 'break' || focus.value?.phase === 'break-done')
 
 function meta(task: Task) {
@@ -31,6 +35,19 @@ function meta(task: Task) {
 function routineSub(task: Task) {
   const n = streakOf(task)
   return n > 0 ? t('today.streak', { n }) : fmt.repeatLabel(task.repeat)
+}
+
+/** Tick: finish it, it leaves the list, and the toast can bring it back. */
+async function complete(task: Task, habit = false) {
+  if (habit) await toggleRoutine(task)
+  else await setDone(task, true)
+  toast.add({
+    title: t('today.doneToast', { title: task.title }),
+    icon: 'i-lucide-circle-check',
+    color: 'success',
+    duration: 5000,
+    actions: [{ label: t('common.undo'), color: 'neutral', variant: 'outline', onClick: () => { habit ? toggleRoutine(task) : setDone(task, false) } }]
+  } as any)
 }
 
 async function startFocus(task: Task) {
@@ -80,15 +97,15 @@ async function startFocus(task: Task) {
         <h2 class="m-0 text-[15px] font-semibold">{{ t('today.top3', { top: topN }) }}</h2>
         <span class="text-[13px] font-semibold" :class="allDone ? 'text-brand' : 'text-soft'" data-testid="top-progress">{{ t('today.routineOf', { done: doneCount, total: top3.length }) }}</span>
       </div>
-      <div class="card mx-[22px] flex flex-col overflow-hidden">
-        <div v-for="task in top3" :key="task.id" class="flex min-h-[64px] items-center gap-3 border-b border-rule2 px-4 py-2.5 last:border-b-0" data-testid="top3-row">
-          <CheckCircle :checked="task.status === 'done'" :label="task.status === 'done' ? t('today.markUndone') : t('today.markDone')" @toggle="setDone(task, task.status !== 'done')" />
+      <div v-if="openTop.length" class="card mx-[22px] flex flex-col overflow-hidden">
+        <div v-for="task in openTop" :key="task.id" class="flex min-h-[64px] items-center gap-3 border-b border-rule2 px-4 py-2.5 last:border-b-0" data-testid="top3-row">
+          <CheckCircle :checked="false" :label="t('today.markDone')" @toggle="complete(task)" />
           <button type="button" class="flex min-w-0 grow flex-col gap-0.5 text-left" @click="openTask(task.id)">
-            <span class="truncate text-[15px]" :class="task.status === 'done' ? 'text-soft line-through' : 'font-medium text-ink'" :title="task.title">{{ task.title }}</span>
+            <span class="truncate text-[15px] font-medium text-ink" :title="task.title">{{ task.title }}</span>
             <span v-if="meta(task)" class="truncate text-[12px] text-soft">{{ meta(task) }}</span>
           </button>
           <button
-            v-if="task.status !== 'done' && !focus"
+            v-if="!focus"
             type="button"
             class="flex size-11 shrink-0 items-center justify-center rounded-full"
             :class="task.id === upNext?.id ? 'bg-brand text-white' : 'border border-edge bg-white text-brand'"
@@ -100,7 +117,7 @@ async function startFocus(task: Task) {
           </button>
         </div>
       </div>
-      <p v-if="allDone" class="m-0 mx-[22px] mt-2.5 flex items-center gap-2 text-[14px] font-medium text-brand-dark" data-testid="hero-done">
+      <p v-if="allDone" class="card m-0 mx-[22px] flex items-center gap-2.5 p-4 text-[15px] font-semibold text-brand-dark" data-testid="hero-done">
         <UIcon name="i-lucide-circle-check" class="size-5 shrink-0" />{{ t('today.allDoneTitle', { top: topN }) }}
       </p>
     </template>
@@ -119,15 +136,15 @@ async function startFocus(task: Task) {
         <h2 class="m-0 text-[15px] font-semibold">{{ t('today.routine') }}</h2>
         <span class="text-[13px] text-soft">{{ t('today.routineOf', { done: routinesDone, total: routinesToday.length }) }}</span>
       </div>
-      <div class="card mx-[22px] flex flex-col overflow-hidden">
-        <div v-for="r in routinesToday" :key="r.id" class="flex min-h-[60px] items-center gap-3 border-b border-rule2 px-4 py-2 last:border-b-0" data-testid="routine-tile">
-          <CheckCircle :checked="routineDone(r)" :label="`${r.title}: ${routineDone(r) ? t('today.markUndone') : t('today.markDone')}`" data-testid="routine-check" @toggle="toggleRoutine(r)" />
+      <div v-if="openRoutines.length" class="card mx-[22px] flex flex-col overflow-hidden">
+        <div v-for="r in openRoutines" :key="r.id" class="flex min-h-[60px] items-center gap-3 border-b border-rule2 px-4 py-2 last:border-b-0" data-testid="routine-tile">
+          <CheckCircle :checked="false" :label="`${r.title}: ${t('today.markDone')}`" data-testid="routine-check" @toggle="complete(r, true)" />
           <button type="button" class="flex min-w-0 grow flex-col gap-0.5 text-left" @click="openTask(r.id)">
-            <span class="truncate text-[15px]" :class="routineDone(r) ? 'text-soft line-through' : 'font-medium text-ink'">{{ r.title }}</span>
+            <span class="truncate text-[15px] font-medium text-ink">{{ r.title }}</span>
             <span class="truncate text-[12px] text-soft">{{ routineSub(r) }}</span>
           </button>
           <button
-            v-if="!routineDone(r) && !focus"
+            v-if="!focus"
             type="button"
             class="flex size-11 shrink-0 items-center justify-center rounded-full border border-edge bg-white text-brand"
             :aria-label="`${r.title}: ${t('today.startFocus', { n: r.sessionMin })}`"
@@ -138,6 +155,9 @@ async function startFocus(task: Task) {
           </button>
         </div>
       </div>
+      <p v-else class="card m-0 mx-[22px] flex items-center gap-2.5 p-4 text-[15px] font-semibold text-brand-dark" data-testid="routines-done">
+        <UIcon name="i-lucide-circle-check" class="size-5 shrink-0" />{{ t('today.routinesDone') }}
+      </p>
     </template>
 
     <TabBar />
