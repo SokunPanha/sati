@@ -99,7 +99,7 @@ const tid = id => page.locator(`[data-testid="${id}"]`)
 const settle = (ms = 450) => page.waitForTimeout(ms)
 
 await step('load app → splash is shown first', async () => {
-  await page.goto(BASE + '/', { waitUntil: 'commit' })
+  await page.goto(BASE + '/welcome', { waitUntil: 'commit' })
   await page.waitForSelector('#sati-boot, [role="status"][aria-label="Sati"]', { timeout: 8000 })
   await page.waitForTimeout(350)
   await shot('00-splash')
@@ -601,9 +601,15 @@ await step('landing page opens without a profile (no redirect to welcome)', asyn
   const url = lp.url()
   const overflow = await lp.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
   await lp.screenshot({ path: `${SHOTS}19-landing-desktop-km.png`, fullPage: true })
+  await lp.goto(BASE + '/')
+  await lp.locator('[data-testid="page-download"]').waitFor()
+  const rootUrl = new URL(lp.url()).pathname
+  await lp.locator('[data-testid="landing-browser"]').click()
+  await lp.locator('[data-testid="page-welcome"]').waitFor()
   await fresh.close()
   if (!url.endsWith('/download') || overflow) throw new Error(`url=${url} overflow=${overflow}`)
-  return 'stays on /download, no horizontal scroll'
+  if (rootUrl !== '/') throw new Error(`/ redirected to ${rootUrl}`)
+  return 'stays on /download, no horizontal scroll; / shows the landing page, "use in browser" → welcome'
 })
 
 await step('icons render from the client bundle (no network)', async () => {
@@ -647,7 +653,7 @@ await step('manifest + service worker are served; sw.js has the notificationclic
 })
 
 await step('service worker registers and controls the page; manifest link + apple meta present', async () => {
-  await p2.goto(BASE + '/')
+  await p2.goto(BASE + '/welcome')
   await t2('page-welcome').waitFor()
   await p2.evaluate(() => navigator.serviceWorker.ready)
   const head = await p2.evaluate(() => ({

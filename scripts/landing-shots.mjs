@@ -22,7 +22,7 @@ const ready = async (id) => {
 }
 const document_fonts = () => page.evaluate(() => document.fonts.ready)
 
-await page.goto(BASE + '/')
+await page.goto(BASE + '/welcome')
 await tid('welcome-name').fill('ដារ៉ា')
 await tid('welcome-create').click()
 await tid('welcome-skip').click()
