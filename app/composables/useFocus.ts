@@ -129,7 +129,7 @@ export const useFocus = shared(() => {
     ensureTimer()
   }
 
-  /** "Batch in 1 block": one session for several small tasks. */
+  /** "Batch in 1 block": one session for several small tasks; with no tasks, a plain session (a reminder's focus time). */
   async function startBatch(tasks: Task[], title: string, minutes: number) {
     const { settings } = useSettings()
     const now = Date.now()
@@ -139,7 +139,7 @@ export const useFocus = shared(() => {
       batchIds: tasks.map(t => t.id),
       title,
       area: '',
-      box: 3,
+      box: tasks.length ? 3 : 2,
       isRoutine: false,
       plannedMin: minutes,
       breakMin: settings.value.breakMin,

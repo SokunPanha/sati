@@ -25,7 +25,7 @@ export const useReminders = shared(() => {
   const next = computed(() => upcoming.value.find(r => r.at >= runtime.now - 60000) || null)
   const todayCount = computed(() => upcoming.value.filter(r => r.date === runtime.today && r.at >= runtime.now - 60000).length)
 
-  interface Input { title: string, date: string, time: string, alertBefore: number, repeat: Reminder['repeat'] }
+  interface Input { title: string, date: string, time: string, alertBefore: number, repeat: Reminder['repeat'], focusMin: number }
 
   async function save(input: Input, id: string | null = null, texts?: { title: string, body: string }) {
     const db = requireDb()
@@ -39,6 +39,7 @@ export const useReminders = shared(() => {
       at,
       alertBefore: input.alertBefore,
       repeat: input.repeat,
+      focusMin: input.focusMin,
       done: false,
       createdAt: Date.now()
     }
@@ -53,7 +54,7 @@ export const useReminders = shared(() => {
     await db.reminders.put(rem)
     // Bonus: let the OS fire it even if the app is closed (Notification Triggers, where available).
     if (texts && notify.supportsTriggers && notify.permission.value === 'granted') {
-      const ok = await notify.scheduleTrigger(reminderKey(rem), at - rem.alertBefore * 60000, texts.title, texts.body, '/reminders')
+      const ok = await notify.scheduleTrigger(reminderKey(rem), at - rem.alertBefore * 60000, texts.title, texts.body, rem.focusMin ? '/notifications' : '/reminders')
       if (ok) await db.fired.put({ key: `trig|${reminderKey(rem)}`, at: Date.now() })
     }
     return rem

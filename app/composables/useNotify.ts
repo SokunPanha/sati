@@ -163,6 +163,7 @@ export interface DeliverInput {
   url?: string
   action?: 'focus' | null
   taskId?: string | null
+  focusMin?: number
   at?: number
   /** keep it in the in-app list only (missed long ago, or already scheduled with a trigger) */
   inAppOnly?: boolean
@@ -190,7 +191,8 @@ async function deliver(input: DeliverInput) {
     read: false,
     url: input.url || '/notifications',
     action: input.action ?? null,
-    taskId: input.taskId ?? null
+    taskId: input.taskId ?? null,
+    ...(input.focusMin ? { focusMin: input.focusMin } : {})
   }
   await db.notifications.add(note)
   if (held || input.inAppOnly) return { note, system: false }

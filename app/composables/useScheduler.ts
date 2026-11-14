@@ -41,7 +41,9 @@ async function checkReminders(db: ProfileDb, now: number) {
           kind: 'reminder',
           title,
           body,
-          url: '/reminders',
+          // with a focus time, open the list where its Start focus button is
+          url: r.focusMin ? '/notifications' : '/reminders',
+          ...(r.focusMin ? { action: 'focus' as const, focusMin: r.focusMin } : {}),
           at: Math.max(alertAt, now - REMINDER_CATCHUP),
           inAppOnly: viaTrigger || now - alertAt > REMINDER_CATCHUP,
           tag: key

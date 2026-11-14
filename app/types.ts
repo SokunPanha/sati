@@ -86,6 +86,8 @@ export interface Reminder {
   /** minutes before `at` to alert; 0 = on time */
   alertBefore: number
   repeat: 'none' | 'daily' | 'weekly' | 'monthly'
+  /** minutes of focus to offer when it fires; 0 or missing = no focus */
+  focusMin?: number
   done: boolean
   createdAt: number
 }
@@ -103,6 +105,8 @@ export interface AppNotification {
   /** 'focus' shows a Start focus button for taskId */
   action: 'focus' | null
   taskId: string | null
+  /** 'focus' without a task (a reminder): length of the session to start */
+  focusMin?: number
 }
 
 export interface HistoryEvent {

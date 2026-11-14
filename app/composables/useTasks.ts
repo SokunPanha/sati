@@ -68,7 +68,7 @@ export const useTasks = shared(() => {
   }
 
   /** Capture: straight to the inbox, zero questions. */
-  async function capture(title: string, description = '') {
+  async function capture(title: string, description = '', sessionMin?: number) {
     const clean = title.trim()
     if (!clean) return null
     const { settings } = useSettings()
@@ -82,7 +82,7 @@ export const useTasks = shared(() => {
       box: 4,
       area: '',
       dueDate: null,
-      sessionMin: settings.value.focusMin,
+      sessionMin: sessionMin || settings.value.focusMin,
       sessionsPlanned: 1,
       sessionsDone: 0,
       repeat: { type: 'none', days: [] },
