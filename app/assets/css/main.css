@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  /* Latin glyphs come from Inter / Space Grotesk, Khmer glyphs fall through to Kantumruy Pro,
+     then to system Khmer fonts when offline before the web font was ever cached. */
+  --font-sans: Inter, 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer Sangam MN', 'Khmer OS', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer Sangam MN', 'Khmer OS', system-ui, sans-serif;
+
+  --color-cream: #F5F4EF;
+  --color-ink: #1A1A17;
+  --color-soft: #5C5B55;
+  --color-faint: #9C998F;
+  --color-rule: #E4E2DA;
+  --color-rule2: #EFEDE6;
+  --color-edge: #DEDBD2;
+  --color-ringc: #C9C6BB;
+  --color-seg: #E9E7E0;
+  --color-switchoff: #D6D3C8;
+
+  --color-brand: #0F6E64;
+  --color-brand-dark: #0A4F48;
+  --color-brand-tint: #E3F0EC;
+  --color-brand-soft: #C4DED6;
+  --color-brand-pale: #BFE6DD;
+  --color-mint: #9FE0D3;
+  --color-accent: #3FB8A3;
+
+  --color-night: #0E1C1A;
+  --color-night2: #1C3330;
+  --color-nightline: #2E4844;
+  --color-nighttext: #A9B8B4;
+
+  --color-b1: #C2510F;
+  --color-b1-bg: #FBE9DF;
+  --color-b1-tx: #8A3409;
+  --color-b1-line: #E8C3AE;
+  --color-b3: #B08A00;
+  --color-b3-bg: #F6EDCF;
+  --color-b3-tx: #5E4900;
+  --color-b4: #8E8C85;
+  --color-b4-bg: #ECEAE4;
+  --color-b4-tx: #4A4943;
+
+  --color-rem: #2563A8;
+  --color-rem-bg: #E6EEF8;
+  --color-rem-tx: #1D4F86;
+}
+
+html {
+  background: #E9E7E0;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  --ui-primary: #0F6E64;
+  --ui-bg: #F5F4EF;
+  --ui-text: #1A1A17;
+  --ui-text-highlighted: #1A1A17;
+  --ui-text-muted: #5C5B55;
+  --ui-border: #E4E2DA;
+  --ui-radius: 0.75rem;
+  margin: 0;
+  background: #E9E7E0;
+  color: #1A1A17;
+  font-family: var(--font-sans);
+  line-height: 1.45;
+  overscroll-behavior-y: none;
+}
+
+/* Khmer has stacked consonants and vowels above/below the line: give it more room. */
+html:lang(km) body { line-height: 1.7; }
+.display { font-family: var(--font-display); line-height: 1.15; letter-spacing: -0.3px; }
+html:lang(km) .display { line-height: 1.45; letter-spacing: 0; }
+.caps { letter-spacing: 0.6px; text-transform: uppercase; }
+html:lang(km) .caps { letter-spacing: 0; }
+
+/* Phone-width column, centred on desktop. */
+.app-col {
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+}
+.screen {
+  min-height: 100dvh;
+  background: var(--color-cream);
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.pb-safe { padding-bottom: calc(30px + env(safe-area-inset-bottom)); }
+.fixed-col {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+}
+
+button, a, input, select, textarea { font-family: inherit; }
+button { cursor: pointer; }
+input[type='date'], input[type='time'] { min-height: 44px; }
+
+.card { background: #fff; border: 1px solid var(--color-rule); border-radius: 16px; }
+.section-label { margin: 0 0 0 4px; font-size: 12px; font-weight: 600; color: var(--color-soft); }
+.tap { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+
+.field {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--color-edge);
+  background: #fff;
+  padding: 0 14px;
+  color: var(--color-ink);
+  font-size: 16px;
+  outline: none;
+}
+.field:focus { border-color: var(--color-brand); box-shadow: 0 0 0 1px var(--color-brand); }
+
+.native-select {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--color-soft);
+  font-size: 14px;
+  text-align: right;
+  text-align-last: right;
+  min-height: 44px;
+  padding: 0 2px;
+  outline: none;
+  max-width: 190px;
+}
+
+@keyframes sati-dot {
+  0%, 100% { opacity: 0.25; background: #F5F4EF; }
+  33% { opacity: 1; background: #3FB8A3; }
+  66% { opacity: 0.55; background: #F5F4EF; }
+}
+.fade-leave-active { transition: opacity 0.45s ease; }
+.fade-leave-to { opacity: 0; }
+.page-enter-active { transition: opacity 0.15s ease; }
+.page-enter-from { opacity: 0; }

@@ -1,0 +1,39 @@
+<!-- Inline splash shown before the app boots, so there is never a white flash. Mirrors components/SplashScreen.vue -->
+<div id="sati-boot" role="img" aria-label="Sati">
+  <svg class="sb-rings" width="560" height="560" viewBox="0 0 560 560" aria-hidden="true">
+    <circle cx="280" cy="280" r="270" fill="none" stroke="#FFFFFF" stroke-opacity="0.05" stroke-width="2"/>
+    <circle cx="280" cy="280" r="200" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="2"/>
+    <circle cx="280" cy="280" r="130" fill="none" stroke="#FFFFFF" stroke-opacity="0.09" stroke-width="2"/>
+  </svg>
+  <div class="sb-mid">
+    <svg width="112" height="112" viewBox="0 0 104 104" aria-hidden="true">
+      <circle cx="52" cy="52" r="42" fill="none" stroke="#F5F4EF" stroke-width="6"/>
+      <path d="M52 18l11 34H41z" fill="#3FB8A3"/>
+      <path d="M41 52h22L52 86z" fill="#F5F4EF" opacity="0.35"/>
+      <circle cx="52" cy="52" r="6" fill="#0E1C1A" stroke="#F5F4EF" stroke-width="3"/>
+    </svg>
+    <div class="sb-name"><span class="sb-en">Sati</span><span class="sb-km">សតិ</span></div>
+  </div>
+  <div class="sb-foot">
+    <div class="sb-dots"><span></span><span></span><span></span></div>
+    <div class="sb-tag"><span class="sb-t1">ចិត្តស្ងប់ ផ្ដោតលើរឿងម្ដងមួយ</span><span class="sb-t2">Calm mind. One thing at a time.</span></div>
+  </div>
+</div>
+<style>
+  html, body { margin: 0; background: #0E1C1A; }
+  #sati-boot { position: fixed; inset: 0; z-index: 9999; background: #0E1C1A; color: #F5F4EF; display: flex; flex-direction: column; align-items: center; overflow: hidden; padding: 0 32px calc(56px + env(safe-area-inset-bottom)); box-sizing: border-box; font-family: Inter, 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer Sangam MN', system-ui, sans-serif; }
+  #sati-boot .sb-rings { position: absolute; left: 50%; top: 34.5%; transform: translate(-50%, -35.5%); }
+  #sati-boot .sb-mid { margin-top: 34.4vh; display: flex; flex-direction: column; align-items: center; gap: 26px; position: relative; }
+  #sati-boot .sb-name { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  #sati-boot .sb-en { font-family: 'Space Grotesk', Inter, system-ui, sans-serif; font-size: 52px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+  #sati-boot .sb-km { font-size: 22px; font-weight: 500; color: #9FE0D3; line-height: 1.6; }
+  #sati-boot .sb-foot { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 22px; position: relative; }
+  #sati-boot .sb-dots { display: flex; gap: 10px; }
+  #sati-boot .sb-dots span { width: 10px; height: 10px; border-radius: 5px; background: #F5F4EF; opacity: 0.25; animation: sb-dot 1.2s infinite ease-in-out; }
+  #sati-boot .sb-dots span:nth-child(2) { animation-delay: 0.2s; }
+  #sati-boot .sb-dots span:nth-child(3) { animation-delay: 0.4s; }
+  #sati-boot .sb-tag { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+  #sati-boot .sb-t1 { font-size: 15px; font-weight: 500; line-height: 1.7; }
+  #sati-boot .sb-t2 { font-size: 14px; color: #9FE0D3; }
+  @keyframes sb-dot { 0%, 100% { opacity: 0.25; background: #F5F4EF; } 33% { opacity: 1; background: #3FB8A3; } 66% { opacity: 0.55; background: #F5F4EF; } }
+</style>
