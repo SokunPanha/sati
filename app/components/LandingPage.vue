@@ -7,7 +7,6 @@ type Platform = 'android' | 'iphone' | 'desktop'
 
 const { t, locale, setLocale } = useI18n()
 const { active } = useProfile()
-const pwa = usePWA()
 
 const ua = navigator.userAgent
 const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
@@ -19,8 +18,13 @@ const appLink = computed(() => active.value ? '/' : '/welcome')
 const tab = ref<Platform>(detected)
 const justInstalled = ref(false)
 const installed = computed(() => standalone || justInstalled.value)
-/** the browser handed us its install prompt (beforeinstallprompt) */
-const canPrompt = computed(() => !!pwa?.showInstallPrompt)
+/** The browser's install offer (beforeinstallprompt), caught by an inline script in <head>. */
+type InstallEvent = Event & { prompt: () => Promise<void>, userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
+const w = window as unknown as { __satiInstall: InstallEvent | null }
+const canPrompt = ref(!!w.__satiInstall)
+const onReady = () => { canPrompt.value = true }
+/** Pop-up with this device's install steps, for browsers without an install dialog (iPhone, Firefox…). */
+const howOpen = ref(false)
 
 const stepCount: Record<Platform, number> = { android: 3, iphone: 4, desktop: 3 }
 const platforms: Array<{ value: Platform, icon: string }> = [
@@ -49,22 +53,45 @@ function showHow() {
   document.getElementById('how')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+/** The install offer can arrive a moment after the page loads: wait for it briefly. */
+function waitForOffer(ms: number): Promise<InstallEvent | null> {
+  if (w.__satiInstall) return Promise.resolve(w.__satiInstall)
+  return new Promise((resolve) => {
+    const done = () => {
+      window.removeEventListener('sati-install-ready', done)
+      clearTimeout(timer)
+      resolve(w.__satiInstall)
+    }
+    const timer = setTimeout(done, ms)
+    window.addEventListener('sati-install-ready', done)
+  })
+}
+
 async function install() {
-  if (pwa && canPrompt.value) {
-    const choice = await pwa.install()
-    if (choice?.outcome === 'accepted') justInstalled.value = true
+  const offer = isIOS ? null : await waitForOffer(1500)
+  if (offer) {
+    w.__satiInstall = null // an offer can be used once; the browser sends a new one later if dismissed
+    canPrompt.value = false
+    await offer.prompt()
+    const { outcome } = await offer.userChoice
+    if (outcome === 'accepted') justInstalled.value = true
     return
   }
-  showHow()
+  tab.value = detected
+  howOpen.value = true
 }
 
 function onInstalled() {
   justInstalled.value = true
 }
 
-onMounted(() => window.addEventListener('appinstalled', onInstalled))
+onMounted(() => {
+  window.addEventListener('appinstalled', onInstalled)
+  window.addEventListener('sati-install-ready', onReady)
+})
 onBeforeUnmount(() => {
   window.removeEventListener('appinstalled', onInstalled)
+  window.removeEventListener('sati-install-ready', onReady)
   // The language is stored per profile: leaving the landing page restores the profile's choice.
   const l = active.value?.locale
   if (l && l !== locale.value) setLocale(l)
@@ -272,6 +299,18 @@ const langs = [{ code: 'km' as const, label: 'ខ្មែរ' }, { code: 'en' a
         </NuxtLink>
       </div>
     </footer>
+
+    <!-- Install steps for browsers without an install dialog -->
+    <UModal v-model:open="howOpen" :title="t('landing.howTitle')" :ui="{ content: 'max-w-[440px]' }">
+      <template #body>
+        <ol class="m-0 flex list-none flex-col gap-2.5 p-0" data-testid="install-steps-modal">
+          <li v-for="i in stepCount[tab]" :key="`m-${tab}-${i}`" class="flex items-start gap-3.5 rounded-2xl bg-brand-tint p-4">
+            <span class="display flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-[15px] font-semibold text-white">{{ i }}</span>
+            <span class="pt-1 text-[15px] text-ink">{{ t(`landing.steps.${tab}.s${i}`) }}</span>
+          </li>
+        </ol>
+      </template>
+    </UModal>
   </div>
 </template>
 

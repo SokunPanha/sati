@@ -53,7 +53,12 @@ export default defineNuxtConfig({
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         { rel: 'stylesheet', href: FONT_URL }
-      ]
+      ],
+      // Catch the browser's install offer as early as possible (it fires once, often before the app's JS
+      // has loaded), so the landing page's Install button can open the real install dialog.
+      script: [{
+        innerHTML: "window.__satiInstall=null;addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__satiInstall=e;dispatchEvent(new Event('sati-install-ready'))});addEventListener('appinstalled',function(){window.__satiInstall=null})"
+      }]
     }
   },
 
