@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BackupFile, FocusSession, NotifSettings } from '~/types'
+import type { BackupFile, NotifSettings } from '~/types'
 
 const { t } = useI18n()
 const topN = useTopN()
@@ -31,33 +31,15 @@ async function onPhoto(e: Event) {
   (e.target as HTMLInputElement).value = ''
 }
 
-// ---- stats ----
-const weekFrom = computed(() => startOfWeek(runtime.today, settings.value.weekStart))
-const { data: weekSessions } = useLiveQuery(db => db.sessions.where('date').between(weekFrom.value, runtime.today, true, true).toArray(), [] as FocusSession[], [() => weekFrom.value, () => runtime.today])
-const { data: summary } = useLiveQuery(db => profileSummary(db, runtime.today), { routines: 0, streak: 0 }, [() => runtime.today])
-const weekMin = computed(() => weekSessions.value.reduce((n, s) => n + s.actualMin, 0))
-const box2Pct = computed(() => weekMin.value ? Math.round(weekSessions.value.filter(s => s.box === 2).reduce((n, s) => n + s.actualMin, 0) / weekMin.value * 100) : 0)
-
 // ---- focus ----
 const focusOptions = [15, 20, 25, 30, 45, 50, 60, 90]
 const breakOptions = [5, 10, 15, 20, 30]
-const areasOpen = ref(false)
-const newArea = ref('')
-async function addArea() {
-  const n = newArea.value.trim()
-  if (n && !settings.value.areas.includes(n)) await set('areas', [...settings.value.areas, n])
-  newArea.value = ''
-}
-const removeArea = (a: string) => set('areas', settings.value.areas.filter(x => x !== a))
 
 // ---- notifications ----
 interface Row { key: keyof NotifSettings, timeKey?: keyof NotifSettings, label: string, sub: string }
 const notifRows = computed<Row[]>(() => [
   { key: 'morning', timeKey: 'morningTime', label: t('settings.morning'), sub: t('settings.morningSub', { top: topN.value }) },
-  { key: 'focus', label: t('settings.focusDone'), sub: t('settings.focusDoneSub') },
   { key: 'routine', timeKey: 'routineTime', label: t('settings.routine'), sub: t('settings.routineSub') },
-  { key: 'box2', timeKey: 'box2Time', label: t('settings.box2'), sub: t('settings.box2Sub') },
-  { key: 'due', timeKey: 'dueTime', label: t('settings.due'), sub: t('settings.dueSub') },
   { key: 'evening', timeKey: 'eveningTime', label: t('settings.evening'), sub: t('settings.eveningSub') }
 ])
 async function enableNotifications() {
@@ -94,13 +76,13 @@ async function savePin() {
 
 // ---- data ----
 const lastBackup = computed(() => settings.value.lastBackupAt ? fmt.date(ymd(settings.value.lastBackupAt), { year: 'numeric', month: 'short', day: 'numeric' }) : t('common.never'))
-async function download(all: boolean) {
+async function download() {
   if (!profile.value) return
-  const ids = all ? profiles.value.map(p => p.id) : [profile.value.id]
+  const ids = profiles.value.map(p => p.id)
   await set('lastBackupAt', Date.now())
   const data = await buildBackup(ids)
   const stamp = runtime.today
-  downloadText(`sati-backup-${all ? 'all' : profile.value.name.replace(/[^\p{L}\p{N}_-]+/gu, '_')}-${stamp}.json`, JSON.stringify(data))
+  downloadText(`sati-backup-${stamp}.json`, JSON.stringify(data))
   toast.add({ title: t('settings.backupSaved'), color: 'success', icon: 'i-lucide-download' })
 }
 const restoreInput = ref<HTMLInputElement | null>(null)
@@ -148,14 +130,12 @@ onMounted(() => {
 /** state of the system notification permission → banner at the top of Notifications */
 const perm = computed(() => notify.permission.value)
 const notifTones: Partial<Record<keyof NotifSettings, 'b3' | 'brand' | 'violet' | 'rem' | 'b1' | 'ink'>> = {
-  morning: 'b3', focus: 'brand', routine: 'violet', box2: 'brand', due: 'b1', evening: 'rem'
+  morning: 'b3', routine: 'violet', evening: 'rem'
 }
 const notifIcons: Partial<Record<keyof NotifSettings, string>> = {
-  morning: 'i-lucide-sunrise', focus: 'i-lucide-timer', routine: 'i-lucide-repeat',
-  box2: 'i-lucide-calendar-clock', due: 'i-lucide-calendar-x', evening: 'i-lucide-moon'
+  morning: 'i-lucide-sunrise', routine: 'i-lucide-repeat', evening: 'i-lucide-moon'
 }
 const langOptions = [{ value: 'km' as const, label: 'ខ្មែរ' }, { value: 'en' as const, label: 'English' }]
-const weekOptions = computed(() => [{ value: 1, label: t('settings.monday') }, { value: 0, label: t('settings.sunday') }])
 </script>
 
 <template>
@@ -194,24 +174,6 @@ const weekOptions = computed(() => [{ value: 1, label: t('settings.monday') }, {
         </button>
       </div>
 
-      <div class="relative mt-5 grid grid-cols-3 gap-2">
-        <div class="flex min-w-0 flex-col gap-1 rounded-[16px] bg-night2 px-2.5 py-3">
-          <UIcon name="i-lucide-flame" class="size-4 text-[#F2A365]" />
-          <span class="display truncate text-[20px] font-semibold">{{ summary.streak }}</span>
-          <span class="truncate text-[11px] text-nighttext">{{ t('settings.dayStreak') }}</span>
-        </div>
-        <div class="flex min-w-0 flex-col gap-1 rounded-[16px] bg-night2 px-2.5 py-3">
-          <UIcon name="i-lucide-timer" class="size-4 text-mint" />
-          <span class="display truncate text-[20px] font-semibold">{{ fmt.duration(weekMin) }}</span>
-          <span class="truncate text-[11px] text-nighttext">{{ t('settings.focusWeek') }}</span>
-        </div>
-        <div class="flex min-w-0 flex-col gap-1 rounded-[16px] bg-night2 px-2.5 py-3">
-          <UIcon name="i-lucide-calendar-check" class="size-4 text-mint" />
-          <span class="display truncate text-[20px] font-semibold">{{ box2Pct }}%</span>
-          <span class="truncate text-[11px] text-nighttext">{{ t('settings.inBox2') }}</span>
-        </div>
-      </div>
-
     </section>
 
     <!-- Focus -->
@@ -227,10 +189,6 @@ const weekOptions = computed(() => [{ value: 1, label: t('settings.monday') }, {
         <SettingRow icon="i-lucide-star" tone="b1" :label="t('settings.topCount')">
           <SelectPill :model-value="settings.topCount" :options="[1, 2, 3, 4, 5, 6, 7].map(n => ({ value: n, label: t('settings.topCountN', { n }) }))" :label="t('settings.topCount')" testid="set-top-count" @update:model-value="v => set('topCount', v)" />
         </SettingRow>
-        <SettingRow icon="i-lucide-target" tone="violet" :label="t('settings.dailyGoal')">
-          <SelectPill :model-value="settings.dailyGoal" :options="[1, 2, 3, 4, 5, 6, 7, 8].map(n => ({ value: n, label: t('common.sessions', n) }))" :label="t('settings.dailyGoal')" @update:model-value="v => set('dailyGoal', v)" />
-        </SettingRow>
-        <SettingRow icon="i-lucide-tag" tone="rem" :label="t('settings.areas')" :sub="settings.areas.slice(0, 3).join(' · ') + (settings.areas.length > 3 ? ` +${settings.areas.length - 3}` : '')" button data-testid="set-areas" @click="areasOpen = true" />
       </div>
     </section>
 
@@ -257,15 +215,6 @@ const weekOptions = computed(() => [{ value: 1, label: t('settings.monday') }, {
           </template>
         </SettingRow>
 
-        <SettingRow icon="i-lucide-moon-star" tone="ink" :label="t('settings.quiet')" :sub="t('settings.quietSub')">
-          <USwitch :model-value="settings.quietOn" size="lg" :aria-label="t('settings.quiet')" @update:model-value="set('quietOn', $event)" />
-          <template v-if="settings.quietOn" #below>
-            <TimePill :model-value="settings.quietFrom" :label="`${t('settings.quiet')}: ${t('settings.quietFrom')}`" @update:model-value="v => set('quietFrom', v)" />
-            <UIcon name="i-lucide-arrow-right" class="size-4 shrink-0 text-soft" />
-            <TimePill :model-value="settings.quietTo" :label="`${t('settings.quiet')}: ${t('settings.quietTo')}`" @update:model-value="v => set('quietTo', v)" />
-          </template>
-        </SettingRow>
-
         <div class="p-3">
           <button type="button" class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand-soft bg-white text-[14px] font-semibold text-brand" data-testid="test-notification" @click="test">
             <UIcon name="i-lucide-send" class="size-4 shrink-0" /><span class="truncate">{{ t('settings.test') }}</span>
@@ -281,11 +230,6 @@ const weekOptions = computed(() => [{ value: 1, label: t('settings.monday') }, {
         <SettingRow icon="i-lucide-languages" tone="rem" :label="t('settings.language')">
           <template #below>
             <SegmentedControl :model-value="profile.locale" :options="langOptions" tone="dark" :label="t('settings.language')" testid="set-language" class="w-full max-w-[280px]" @update:model-value="v => setLanguage(v)" />
-          </template>
-        </SettingRow>
-        <SettingRow icon="i-lucide-calendar-days" tone="violet" :label="t('settings.weekStart')">
-          <template #below>
-            <SegmentedControl :model-value="settings.weekStart" :options="weekOptions" tone="dark" :label="t('settings.weekStart')" class="w-full max-w-[280px]" @update:model-value="v => set('weekStart', v)" />
           </template>
         </SettingRow>
         <SettingRow icon="i-lucide-lock-keyhole" tone="ink" :label="t('settings.pin')" :sub="profile.pinHash ? t('settings.pinOn') : t('settings.pinOff')">
@@ -309,14 +253,7 @@ const weekOptions = computed(() => [{ value: 1, label: t('settings.monday') }, {
           <UIcon name="i-lucide-shield-check" class="mt-0.5 size-5 shrink-0" />
           <span class="text-[13px]"><strong>{{ t('settings.dataBold') }}</strong> {{ t('settings.dataNotice') }}</span>
         </div>
-        <SettingRow icon="i-lucide-download" :label="t('settings.download')" :sub="t('settings.downloadSub', { when: lastBackup })">
-          <template #below>
-            <div class="grid w-full grid-cols-2 gap-2">
-              <button type="button" class="flex h-10 min-w-0 items-center justify-center rounded-xl bg-ink px-2 text-[13px] font-semibold text-white" data-testid="backup-this" @click="download(false)"><span class="truncate">{{ t('settings.thisProfile') }}</span></button>
-              <button type="button" class="flex h-10 min-w-0 items-center justify-center rounded-xl border border-edge bg-white px-2 text-[13px] font-semibold text-ink" data-testid="backup-all" @click="download(true)"><span class="truncate">{{ t('settings.allProfiles') }}</span></button>
-            </div>
-          </template>
-        </SettingRow>
+        <SettingRow icon="i-lucide-download" :label="t('settings.download')" :sub="t('settings.downloadSub', { when: lastBackup })" button data-testid="backup-all" @click="download()" />
         <SettingRow icon="i-lucide-upload" tone="rem" :label="t('settings.restore')" :sub="t('settings.restoreSub')" button @click="restoreInput?.click()" />
         <input ref="restoreInput" type="file" accept="application/json,.json" class="hidden" data-testid="restore-input" @change="onRestoreFile">
         <SettingRow icon="i-lucide-calendar-sync" tone="violet" :label="t('settings.backupReminder')" :sub="t('settings.backupReminderSub')">
@@ -328,22 +265,6 @@ const weekOptions = computed(() => [{ value: 1, label: t('settings.monday') }, {
     <button type="button" class="flex h-12 items-center justify-center gap-2 rounded-2xl text-[15px] font-semibold text-b1-tx hover:bg-b1-bg" data-testid="delete-profile" @click="deleteOpen = true">
       <UIcon name="i-lucide-trash-2" class="size-4" />{{ t('settings.deleteProfile') }}
     </button>
-    <UModal v-model:open="areasOpen" :title="t('settings.areas')" :description="t('settings.areasSub')" :ui="{ content: 'max-w-[420px] rounded-[20px] bg-cream', title: 'display text-[19px] text-ink', description: 'text-[13px] text-soft' }">
-      <template #body>
-        <div class="flex flex-col gap-3">
-          <div class="flex flex-wrap gap-1.5">
-            <span v-for="a in settings.areas" :key="a" class="flex h-11 items-center gap-1 rounded-full border border-edge bg-white pl-3.5 pr-1 text-[14px]">
-              {{ a }}
-              <button type="button" class="flex size-9 items-center justify-center rounded-full text-soft" :aria-label="`${t('common.remove')}: ${a}`" @click="removeArea(a)"><UIcon name="i-lucide-x" class="size-4" /></button>
-            </span>
-          </div>
-          <form class="flex gap-2" @submit.prevent="addArea">
-            <input v-model="newArea" class="field h-11 grow !rounded-xl !text-[14px]" :placeholder="t('settings.areaAdd')" :aria-label="t('settings.areaAdd')" maxlength="40">
-            <UButton type="submit" size="lg" class="h-11 rounded-xl px-4" icon="i-lucide-plus" :label="t('common.add')" />
-          </form>
-        </div>
-      </template>
-    </UModal>
 
     <ConfirmModal v-model:open="restoreOpen" :title="t('settings.restoreTitle')" :body="t('settings.restoreBody', pending?.profiles.length || 1)" :confirm-label="t('settings.restoreDo')" @confirm="doRestore" />
     <ConfirmModal v-model:open="deleteOpen" :title="t('settings.deleteTitle', { name: profile.name })" :body="t('settings.deleteBody')" :confirm-label="t('common.delete')" danger @confirm="doDelete" />

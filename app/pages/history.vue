@@ -13,7 +13,6 @@ const customTo = ref(runtime.today)
 const selectedDay = ref<string | null>(null)
 const showFilter = ref(false)
 const filterBox = ref<0 | Box>(0)
-const filterArea = ref('')
 
 const modeOptions = computed(() => (['day', 'week', 'month', 'custom'] as const).map(v => ({ value: v, label: t(`history.${v}`) })))
 watch(mode, () => { selectedDay.value = null })
@@ -46,12 +45,11 @@ const { data: sessions } = useLiveQuery(db => db.sessions.where('date').between(
 const { data: events } = useLiveQuery(db => db.events.where('date').between(chartFrom.value, chartTo.value, true, true).toArray(), [] as HistoryEvent[], deps)
 const { data: logs } = useLiveQuery(db => db.routineLogs.where('date').between(chartFrom.value, chartTo.value, true, true).toArray(), [] as RoutineLog[], deps)
 
-const pass = (x: { box: Box | null, area: string }) => (!filterBox.value || x.box === filterBox.value) && (!filterArea.value || x.area === filterArea.value)
+const pass = (x: { box: Box | null }) => !filterBox.value || x.box === filterBox.value
 const fSessions = computed(() => sessions.value.filter(pass))
 const fEvents = computed(() => events.value.filter(pass))
 const fLogs = computed(() => logs.value.filter(pass))
-const filtered = computed(() => !!filterBox.value || !!filterArea.value)
-const areaOptions = computed(() => Array.from(new Set([...settings.value.areas, ...sessions.value.map(s => s.area), ...events.value.map(e => e.area)].filter(Boolean))))
+const filtered = computed(() => !!filterBox.value)
 
 const minutesByDay = computed(() => {
   const map: Record<string, number> = {}
@@ -160,13 +158,6 @@ const dayTitle = (day: string) => day === runtime.today ? `${t('common.today')} 
         >
           {{ fmt.boxLabel(b) }}
         </button>
-      </div>
-      <div class="relative">
-        <select v-model="filterArea" class="field h-11 cursor-pointer appearance-none truncate !rounded-xl pr-10 !text-[14px]" :aria-label="t('history.allAreas')">
-          <option value="">{{ t('history.allAreas') }}</option>
-          <option v-for="a in areaOptions" :key="a" :value="a">{{ a }}</option>
-        </select>
-        <UIcon name="i-lucide-chevron-down" class="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-soft" />
       </div>
     </div>
 

@@ -25,7 +25,7 @@ export const useReminders = shared(() => {
   const next = computed(() => upcoming.value.find(r => r.at >= runtime.now - 60000) || null)
   const todayCount = computed(() => upcoming.value.filter(r => r.date === runtime.today && r.at >= runtime.now - 60000).length)
 
-  interface Input { title: string, date: string, time: string, alertBefore: number, repeat: Reminder['repeat'], focusMin: number }
+  interface Input { title: string, date: string, time: string, alertBefore: number, repeat: Reminder['repeat'], focusMin: number, taskId?: string }
 
   async function save(input: Input, id: string | null = null, texts?: { title: string, body: string }) {
     const db = requireDb()
@@ -40,12 +40,16 @@ export const useReminders = shared(() => {
       alertBefore: input.alertBefore,
       repeat: input.repeat,
       focusMin: input.focusMin,
+      ...(input.taskId ? { taskId: input.taskId } : {}),
       done: false,
       createdAt: Date.now()
     }
     if (id) {
       const cur = await db.reminders.get(id)
-      if (cur) rem.createdAt = cur.createdAt
+      if (cur) {
+        rem.createdAt = cur.createdAt
+        if (cur.taskId && !rem.taskId) rem.taskId = cur.taskId
+      }
       await notify.cancelTrigger(`rem|${id}|`)
     }
     // A repeating reminder saved with a past time starts at its next occurrence.

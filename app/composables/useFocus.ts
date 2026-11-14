@@ -191,8 +191,7 @@ export const useFocus = shared(() => {
     f.pausedMs = null
     compute()
     await persist()
-    const settings = await readSettings(db)
-    if (settings.notif.focus && texts) {
+    if (texts) {
       await useNotify().deliver({
         kind: 'focus',
         title: texts.doneTitle(f.title),
@@ -214,8 +213,7 @@ export const useFocus = shared(() => {
     f.endAt = null
     compute()
     await persist()
-    const settings = await readSettings()
-    if (settings.notif.focus && texts) {
+    if (texts) {
       await useNotify().deliver({
         kind: 'break',
         title: texts.breakTitle(),

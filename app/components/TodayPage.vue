@@ -1,21 +1,17 @@
 <script setup lang="ts">
-import type { FocusSession, Task } from '~/types'
+import type { Task } from '~/types'
 
 const { t } = useI18n()
 const topN = useTopN()
 const fmt = useFmt()
 const { active: profile } = useProfile()
 const { sheets, openSort, openTask } = useSheets()
-const { settings } = useSettings()
 const { top3, inbox, active: planTasks, routinesToday, routineDone, streakOf, setDone, toggleRoutine, loaded } = useTasks()
 const { next: nextReminder, todayCount } = useReminders()
 const { focus, remainingMs, start } = useFocus()
 
-const { data: sessionsToday } = useLiveQuery(db => db.sessions.where('date').equals(runtime.today).toArray(), [] as FocusSession[], [() => runtime.today])
 const { data: unread } = useLiveQuery(db => db.notifications.filter(n => !n.read).count(), 0)
 
-const sessionsDone = computed(() => sessionsToday.value.filter(s => s.completed).length)
-const goal = computed(() => settings.value.dailyGoal)
 const upNext = computed(() => top3.value.find(x => x.status !== 'done') || null)
 const rest = computed(() => top3.value.filter(x => x.id !== upNext.value?.id))
 const doneCount = computed(() => top3.value.filter(x => x.status === 'done').length)
@@ -23,10 +19,10 @@ const routinesDone = computed(() => routinesToday.value.filter(r => routineDone(
 const focusOnBreak = computed(() => focus.value?.phase === 'break' || focus.value?.phase === 'break-done')
 
 function meta(task: Task) {
-  const parts = [task.area]
-  if (task.status !== 'done') parts.push(`${task.sessionsPlanned} × ${t('common.min', { n: task.sessionMin })}`)
+  const parts: string[] = []
+  if (task.status !== 'done') parts.push(t('common.min', { n: task.sessionMin }))
   if (task.carriedFrom) parts.push(t('today.carried'))
-  return parts.filter(Boolean).join(' · ')
+  return parts.join(' · ')
 }
 
 async function startFocus(task: Task) {
@@ -64,10 +60,10 @@ function routineSub(task: Task) {
 
     <div class="flex items-end justify-between px-[22px]">
       <h1 class="display m-0 text-[34px] font-bold">{{ t('today.title') }}</h1>
-      <div class="flex flex-col items-end gap-1.5 pb-1.5">
-        <span class="text-[12px] text-soft">{{ t('today.sessionsOf', { done: sessionsDone, goal }) }}</span>
-        <div class="grid gap-1" :style="{ gridTemplateColumns: `repeat(${goal}, minmax(0, 1fr))`, width: `${Math.min(140, goal * 24)}px` }" aria-hidden="true">
-          <div v-for="i in goal" :key="i" class="h-1.5 rounded-full" :class="i <= sessionsDone ? 'bg-brand' : 'bg-edge'" />
+      <div v-if="top3.length" class="flex flex-col items-end gap-1.5 pb-1.5" data-testid="top-progress">
+        <span class="flex items-center gap-1 text-[12px] text-soft" :aria-label="t('today.top3', { top: topN })"><UIcon name="i-lucide-star" class="size-3.5 text-brand" />{{ t('today.routineOf', { done: doneCount, total: top3.length }) }}</span>
+        <div class="grid gap-1" :style="{ gridTemplateColumns: `repeat(${top3.length}, minmax(0, 1fr))`, width: `${Math.min(140, top3.length * 24)}px` }" aria-hidden="true">
+          <div v-for="i in top3.length" :key="i" class="h-1.5 rounded-full" :class="i <= doneCount ? 'bg-brand' : 'bg-edge'" />
         </div>
       </div>
     </div>

@@ -80,25 +80,6 @@ async function checkDaily(db: ProfileDb, s: Settings, now: number, today: string
     })
   }
 
-  if (n.box2 && dueToday(now, today, n.box2Time)) {
-    const did = await db.sessions.where('date').equals(today).filter(x => x.box === 2).count()
-    const candidates = await db.tasks.filter(x => x.status === 'active' && x.box === 2).toArray()
-    const logs = new Set((await db.routineLogs.where('date').equals(today).toArray()).map(l => l.taskId))
-    const task = candidates.find(x => x.top3Date === today && !x.isRoutine)
-      || candidates.find(x => !x.isRoutine)
-      || candidates.find(x => isRoutineDue(x, today) && !logs.has(x.id))
-    if (!did && task && await claim(db, `box2|${today}`)) {
-      await deliver({
-        kind: 'box2',
-        title: t('notif.box2Title'),
-        body: t('notif.box2Body', { title: task.title, n: task.sessionMin }),
-        url: '/notifications',
-        action: 'focus',
-        taskId: task.id
-      })
-    }
-  }
-
   if (n.routine && dueToday(now, today, n.routineTime)) {
     const routines = (await db.tasks.filter(x => x.isRoutine && x.status === 'active').toArray()).filter(x => isRoutineDue(x, today))
     const logs = new Set((await db.routineLogs.where('date').equals(today).toArray()).map(l => l.taskId))
@@ -113,23 +94,6 @@ async function checkDaily(db: ProfileDb, s: Settings, now: number, today: string
         action: 'focus',
         taskId: first.id
       })
-    }
-  }
-
-  if (n.due && dueToday(now, today, n.dueTime)) {
-    const tomorrow = addDays(today, 1)
-    const due = await db.tasks.filter(x => x.status === 'active' && !!x.dueDate && (x.dueDate === tomorrow || x.dueDate === today)).toArray()
-    for (const task of due) {
-      if (await claim(db, `due|${task.id}|${task.dueDate}|${today}`)) {
-        await deliver({
-          kind: 'due',
-          title: t(task.dueDate === today ? 'notif.dueTodayTitle' : 'notif.dueTitle', { title: task.title }),
-          body: t('notif.dueBody', { top: s.topCount || 3 }),
-          url: '/plan',
-          action: 'focus',
-          taskId: task.id
-        })
-      }
     }
   }
 

@@ -57,7 +57,7 @@ export function useFmt() {
   }
 
   const boxName = (box: number) => t(`box.${box}`)
-  const boxLabel = (box: number) => `${box} · ${t(`box.${box}`)}`
+  const boxLabel = (box: number) => t(`box.${box}`)
 
   function repeatLabel(r: { type: string, days: number[] }) {
     if (r.type === 'daily') return t('repeat.daily')

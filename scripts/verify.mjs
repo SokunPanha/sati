@@ -261,23 +261,35 @@ await step('End early from the capture sheet shows minutes left and ends the ses
   return /45 នាទី|44 នាទី/.test(txt)
 })
 
-await step('add a reminder (tomorrow) → listed, shown on Today', async () => {
+await step('add a reminder (tomorrow) → listed, shown on Today; it is a task too (no Task/Reminder tabs)', async () => {
   await page.goto(BASE + '/reminders')
   await tid('new-reminder').click()
-  await tid('reminder-form').waitFor()
+  await tid('capture-text').waitFor()
   await settle()
-  await tid('reminder-title').fill('ប្រជុំក្រុម')
-  await page.locator('[data-testid="reminder-form"] button', { hasText: 'ថ្ងៃស្អែក' }).click()
+  if (await tid('capture-mode').count()) throw new Error('Task/Reminder tabs still shown')
+  if ((await tid('capture-remind').getAttribute('aria-checked')) !== 'true') throw new Error('Remind me is not on')
+  await tid('capture-text').fill('ប្រជុំក្រុម')
+  await tid('reminder-tomorrow').click()
   await tid('reminder-time').fill('10:00')
-  await page.locator('[data-testid="reminder-form"] select').selectOption('15')
+  await tid('reminder-alert').selectOption('15')
+  await tid('capture-box-2').click()
   await shot('10-reminder-sheet-km')
-  await tid('reminder-save').click()
+  await tid('capture-save').click()
   await tid('reminder-row').waitFor()
   await settle(2800)
   await shot('11-reminders-km')
+  const linked = await page.evaluate(async () => {
+    const name = (await indexedDB.databases()).map(d => d.name).find(n => n?.startsWith('sati-p-'))
+    const db = await new Promise(r => { const q = indexedDB.open(name); q.onsuccess = () => r(q.result) })
+    const all = store => new Promise(r => { const q = db.transaction(store).objectStore(store).getAll(); q.onsuccess = () => r(q.result) })
+    const rem = (await all('reminders')).find(x => x.title === 'ប្រជុំក្រុម')
+    const task = (await all('tasks')).find(x => x.title === 'ប្រជុំក្រុម')
+    return !!rem && !!task && rem.taskId === task.id && task.box === 2
+  })
+  if (!linked) throw new Error('reminder not saved as a task in box 2')
   await page.goto(BASE + '/')
   await tid('next-reminder').waitFor()
-  return (await tid('next-reminder').innerText()).includes('ប្រជុំក្រុម')
+  return (await tid('next-reminder').innerText()).includes('ប្រជុំក្រុម') ? 'reminder + task (Schedule box), linked' : false
 })
 
 await step('a due reminder fires once (scheduler catch-up, no duplicates)', async () => {
@@ -676,17 +688,18 @@ await step('permission granted → test button shows a real system notification 
     const [x] = await (await navigator.serviceWorker.ready).getNotifications()
     return x ? { title: x.title, body: x.body, icon: x.icon, badge: x.badge, tag: x.tag, silent: x.silent, vibrate: x.vibrate, data: x.data, perm: Notification.permission } : null
   }, 8000)
-  return n.perm === 'granted' && n.data?.url === '/notifications' && /pwa-192/.test(n.icon) && n.silent === false ? JSON.stringify(n) : false
+  if (!(n?.perm === 'granted' && n.data?.url === '/notifications' && /pwa-192/.test(n.icon) && n.silent === false)) throw new Error(JSON.stringify(n))
+  return JSON.stringify(n)
 })
 
 await step('due reminder → system notification with requireInteraction via the scheduler', async () => {
   await p2.goto(BASE + '/reminders')
   await t2('new-reminder').click()
-  await t2('reminder-form').waitFor()
+  await t2('capture-text').waitFor()
   await p2.waitForTimeout(500)
-  await t2('reminder-title').fill('Call mom')
-  await p2.locator('[data-testid="reminder-form"] button', { hasText: 'ថ្ងៃស្អែក' }).click()
-  await t2('reminder-save').click()
+  await t2('capture-text').fill('Call mom')
+  await t2('reminder-tomorrow').click()
+  await t2('capture-save').click()
   await t2('reminder-row').waitFor()
   await idbPut(p2, 'sati-p-', 'reminders', `row.at = now - 30000; return row`)
   await p2.reload()
@@ -694,7 +707,8 @@ await step('due reminder → system notification with requireInteraction via the
     const x = (await (await navigator.serviceWorker.ready).getNotifications()).find(n => n.title === 'Call mom')
     return x ? { title: x.title, body: x.body, requireInteraction: x.requireInteraction, url: x.data?.url } : null
   })
-  return n.requireInteraction === true && n.url === '/reminders' ? JSON.stringify(n) : false
+  if (!(n?.requireInteraction === true && n.url === '/reminders')) throw new Error(JSON.stringify(n))
+  return JSON.stringify(n)
 })
 
 await step('offline: the app shell and a deep link still load from the service worker', async () => {

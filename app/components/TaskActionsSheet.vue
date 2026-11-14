@@ -4,7 +4,7 @@ const topN = useTopN()
 const fmt = useFmt()
 const toast = useToast()
 const { sheets, openSort } = useSheets()
-const { tasks, addToTop3, removeFromTop3, setDone, moveToBox, remove } = useTasks()
+const { tasks, addToTop3, removeFromTop3, setDone, remove } = useTasks()
 const { start } = useFocus()
 
 const task = computed(() => tasks.value.find(x => x.id === sheets.taskId) || null)
@@ -12,10 +12,9 @@ const inTop3 = computed(() => task.value?.top3Date === runtime.today)
 const sub = computed(() => {
   const x = task.value
   if (!x) return ''
-  const parts = [x.area, fmt.boxLabel(x.box)]
+  const parts = [fmt.boxLabel(x.box), t('common.min', { n: x.sessionMin })]
   if (x.isRoutine) parts.push(fmt.repeatLabel(x.repeat))
-  if (x.dueDate) parts.push(t('task.due', { date: fmt.shortDate(x.dueDate) }))
-  return parts.filter(Boolean).join(' · ')
+  return parts.join(' · ')
 })
 
 function close() {
@@ -74,11 +73,6 @@ const row = 'flex min-h-[52px] w-full items-center gap-3 border-b border-rule2 p
         <button type="button" :class="row" data-testid="action-edit" @click="edit">
           <UIcon name="i-lucide-pencil" class="size-5 text-brand" />{{ t('task.edit') }}
         </button>
-      </div>
-
-      <div v-if="!task.isRoutine" class="flex flex-col gap-2">
-        <span class="text-[13px] font-semibold">{{ t('task.moveTo') }}</span>
-        <BoxPicker :model-value="task.box" testid="move" @update:model-value="b => b && moveToBox(task.id, b)" />
       </div>
 
       <button type="button" class="flex h-[52px] items-center justify-center gap-2 rounded-[14px] border border-b1-line text-[15px] font-semibold text-b1-tx" data-testid="action-delete" @click="del">

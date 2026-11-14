@@ -88,6 +88,8 @@ export interface Reminder {
   repeat: 'none' | 'daily' | 'weekly' | 'monthly'
   /** minutes of focus to offer when it fires; 0 or missing = no focus */
   focusMin?: number
+  /** the task this reminder belongs to, when it was made with "Remind me" on a task */
+  taskId?: string
   done: boolean
   createdAt: number
 }

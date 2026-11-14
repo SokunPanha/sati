@@ -174,14 +174,13 @@ export interface DeliverInput {
  * Deliver one alert:
  *  - always saved to the in-app notifications list;
  *  - shown as a system notification with sound + vibration, unless a focus session is running
- *    or it is quiet hours (reminders and the focus timer always come through).
+ *    (reminders and the focus timer always come through).
  */
 async function deliver(input: DeliverInput) {
   const db = requireDb()
-  const settings = await readSettings(db)
   const now = Date.now()
   const always = input.kind === 'reminder' || input.kind === 'focus' || input.kind === 'break' || input.kind === 'test'
-  const held = !always && (runtime.focusing || (settings.quietOn && inQuietHours(now, settings.quietFrom, settings.quietTo)))
+  const held = !always && runtime.focusing
   const note: AppNotification = {
     id: uid(),
     kind: input.kind,
