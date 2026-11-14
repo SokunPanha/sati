@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import type { FocusSession, HistoryEvent, Task } from '~/types'
 
-// Plan tomorrow: one job — pick tomorrow's Top N. One line about today, the inbox only when something waits,
-// then one list: picked tasks (✓, tap × to remove) followed by suggestions (tap + to add). Adding saves at once.
+// Plan tomorrow: one job — build tomorrow's Top N. It mirrors the day rollover (rolloverTop3): tasks planned for
+// tomorrow come first, then today's unfinished Top tasks fill the room that is left (they move by themselves).
+// Below: every open task, one tap to plan it for tomorrow. Adding saves at once.
 const { t } = useI18n()
 const topN = useTopN()
 const fmt = useFmt()
 const toast = useToast()
 const { openSort } = useSheets()
-const { inbox, top3, active, top3For, planFor, unplan } = useTasks()
+const { inbox, top3, active, planFor, unplan } = useTasks()
 
 const { data: sessions } = useLiveQuery(db => db.sessions.where('date').equals(runtime.today).toArray(), [] as FocusSession[], [() => runtime.today])
 const { data: events } = useLiveQuery(db => db.events.where('date').equals(runtime.today).toArray(), [] as HistoryEvent[], [() => runtime.today])
@@ -20,26 +21,20 @@ const todayLine = computed(() => `${t('common.today')} · ${top3.value.length
   ? t('review.summary', { done: top3Done.value, total: top3.value.length, time: fmt.duration(focusMin.value) })
   : t('review.summaryFree', { done: doneToday.value, time: fmt.duration(focusMin.value) })}`)
 
-// Tomorrow's Top: suggest unfinished Top tasks first, then Do now, then Schedule.
+// Tomorrow's Top, as the rollover will build it: planned first, then today's unfinished Top tasks while there is room.
 const tomorrow = computed(() => addDays(runtime.today, 1))
-const picked = computed(() => top3For(tomorrow.value))
-const unfinishedToday = computed(() => top3.value.filter(x => x.status === 'active'))
-const suggestions = computed<Task[]>(() => {
-  const room = topN.value - picked.value.length
-  if (room <= 0) return []
-  const taken = new Set(picked.value.map(x => x.id))
-  const pool = [...unfinishedToday.value, ...active.value.filter(x => x.box === 1), ...active.value.filter(x => x.box === 2)]
-  const out: Task[] = []
-  for (const task of pool) {
-    if (taken.has(task.id)) continue
-    taken.add(task.id)
-    out.push(task)
-    if (out.length >= room) break
-  }
-  return out
+const planned = computed(() => active.value.filter(x => !x.isRoutine && x.planDate === tomorrow.value))
+const carried = computed(() => {
+  const ids = new Set(planned.value.map(x => x.id))
+  const room = Math.max(0, topN.value - planned.value.length)
+  return top3.value.filter(x => x.status === 'active' && !x.planDate && !ids.has(x.id)).slice(0, room)
 })
-const isCarried = (task: Task) => unfinishedToday.value.some(x => x.id === task.id)
-const pickerOpen = ref(false)
+const tomorrowCount = computed(() => planned.value.length + carried.value.length)
+/** Every other open task, Do now first, to plan for tomorrow with one tap. */
+const candidates = computed(() => {
+  const taken = new Set([...planned.value, ...carried.value].map(x => x.id))
+  return active.value.filter(x => !x.isRoutine && !taken.has(x.id)).sort((a, b) => a.box - b.box)
+})
 
 async function add(task: Task) {
   if (!(await planFor(task.id, tomorrow.value))) toast.add({ title: t('task.top3Full', { top: topN.value }), color: 'warning' })
@@ -68,18 +63,31 @@ async function add(task: Task) {
       <section class="card flex flex-col !rounded-[18px] p-4 pb-2" data-testid="review-top">
         <div class="mb-1 flex items-center gap-2.5">
           <span class="grow text-[15px] font-semibold">{{ t('review.step3', { top: topN }) }}</span>
-          <span class="text-[13px] font-semibold" :class="picked.length >= topN ? 'text-brand' : 'text-soft'">{{ picked.length }}/{{ topN }}</span>
+          <span class="text-[13px] font-semibold" :class="tomorrowCount >= topN ? 'text-brand' : 'text-soft'" data-testid="tomorrow-count">{{ tomorrowCount }}/{{ topN }}</span>
         </div>
 
-        <div v-for="task in picked" :key="task.id" class="flex min-h-[48px] items-center gap-3 border-b border-rule2 last:border-b-0" data-testid="tomorrow-pick">
+        <div v-for="task in planned" :key="task.id" class="flex min-h-[48px] items-center gap-3 border-b border-rule2 last:border-b-0" data-testid="tomorrow-pick">
           <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand text-white"><UIcon name="i-lucide-check" class="size-4" /></span>
-          <span class="min-w-0 grow text-[14px] font-medium">{{ task.title }} <span v-if="isCarried(task)" class="font-normal text-soft">{{ t('review.carried') }}</span></span>
+          <span class="min-w-0 grow truncate text-[14px] font-medium">{{ task.title }}</span>
           <BoxBadge :box="task.box" />
-          <button v-if="task.planDate" type="button" class="tap -mr-2 text-soft" :aria-label="t('common.remove')" @click="unplan(task.id)"><UIcon name="i-lucide-x" class="size-4" /></button>
+          <button type="button" class="tap -mr-2 text-soft" :aria-label="t('common.remove')" @click="unplan(task.id)"><UIcon name="i-lucide-x" class="size-4" /></button>
+        </div>
+        <div v-for="task in carried" :key="task.id" class="flex min-h-[48px] items-center gap-3 border-b border-rule2 last:border-b-0" data-testid="tomorrow-carried">
+          <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand"><UIcon name="i-lucide-corner-down-right" class="size-3.5" /></span>
+          <span class="flex min-w-0 grow flex-col">
+            <span class="truncate text-[14px] font-medium">{{ task.title }}</span>
+            <span class="text-[12px] text-soft">{{ t('review.carried') }}</span>
+          </span>
+          <BoxBadge :box="task.box" />
         </div>
 
+        <span v-if="!tomorrowCount" class="py-2 text-[13px] text-soft">{{ t('review.emptyTomorrow') }}</span>
+      </section>
+
+      <section v-if="candidates.length" class="card flex flex-col !rounded-[18px] p-4 pb-2" data-testid="review-candidates">
+        <span class="mb-1 text-[15px] font-semibold">{{ t('review.addFrom') }}</span>
         <button
-          v-for="task in suggestions"
+          v-for="task in candidates"
           :key="task.id"
           type="button"
           class="flex min-h-[48px] items-center gap-3 border-b border-rule2 text-left last:border-b-0"
@@ -88,19 +96,13 @@ async function add(task: Task) {
           @click="add(task)"
         >
           <span class="flex size-6 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-ringc text-soft"><UIcon name="i-lucide-plus" class="size-3.5" /></span>
-          <span class="min-w-0 grow text-[14px] text-soft">{{ task.title }} <span v-if="isCarried(task)">{{ t('review.carried') }}</span></span>
+          <span class="min-w-0 grow truncate text-[14px] text-ink">{{ task.title }}</span>
           <BoxBadge :box="task.box" />
         </button>
-
-        <span v-if="!picked.length && !suggestions.length" class="py-2 text-[13px] text-soft">{{ t('review.noSuggestions') }}</span>
-
-        <button v-if="picked.length < topN && active.length" type="button" class="my-2 h-11 whitespace-nowrap rounded-xl border border-dashed border-ringc text-[14px] text-soft" data-testid="pick-more" @click="pickerOpen = true">
-          {{ t('review.pickMore', { n: topN - picked.length }) }}
-        </button>
       </section>
+      <span v-else-if="!active.length" class="px-1 text-[13px] text-soft">{{ t('review.noSuggestions') }}</span>
     </div>
 
-    <TaskPickerSheet v-model:open="pickerOpen" :day="tomorrow" />
     <TabBar />
   </div>
 </template>

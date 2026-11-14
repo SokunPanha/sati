@@ -165,6 +165,8 @@
     "sort": "Sort",
     "step3": "Tomorrow's Top {top}",
     "carried": "(carried over)",
+    "addFrom": "Add from your tasks",
+    "emptyTomorrow": "Nothing planned for tomorrow yet.",
     "pickMore": "+ Pick {n} more from Plan",
     "noSuggestions": "Nothing to suggest yet. Sort your inbox first.",
     "pickerTitle": "Pick for tomorrow",
