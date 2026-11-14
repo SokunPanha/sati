@@ -309,7 +309,7 @@ await step('a due reminder fires once (scheduler catch-up, no duplicates)', asyn
 
 await step('Review + History render with logged data', async () => {
   await page.goto(BASE + '/review')
-  await tid('review-step1').waitFor()
+  await tid('review-today').waitFor()
   await settle(600)
   await shot('13-review-km')
   const sug = await tid('tomorrow-suggestion').count()
@@ -499,7 +499,7 @@ await step('Settings: number of top tasks per day is configurable (Review shows 
   await tid('set-top-count').selectOption('5')
   await settle(300)
   await page.goto(BASE + '/review')
-  await tid('review-step1').waitFor()
+  await tid('review-today').waitFor()
   await settle(500)
   const txt = await page.locator('[data-testid="page-review"]').innerText()
   await page.goto(BASE + '/settings')

@@ -8,7 +8,7 @@ const left = computed(() => [
   { to: '/plan', label: t('tabs.plan'), icon: 'i-lucide-layout-grid' }
 ])
 const right = computed(() => [
-  { to: '/review', label: t('tabs.review'), icon: 'i-lucide-rotate-cw' },
+  { to: '/review', label: t('tabs.review'), icon: 'i-lucide-sunrise' },
   { to: '/settings', label: t('tabs.settings'), icon: 'i-lucide-settings' }
 ])
 </script>
