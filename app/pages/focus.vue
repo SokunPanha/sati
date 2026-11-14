@@ -2,7 +2,8 @@
 // Full-screen focus mode. The session is persisted (endAt timestamp), so a reload keeps the countdown.
 const { t } = useI18n()
 const { openCapture } = useSheets()
-const { focus, remainingMs, totalMs, paused, pause, resume, startBreak, again, finish } = useFocus()
+const { focus, remainingMs, totalMs, paused, pause, resume, startBreak, again, finish, endEarly } = useFocus()
+const toast = useToast()
 const { tasks, streakOf } = useTasks()
 
 const R = 122
@@ -40,6 +41,14 @@ onBeforeUnmount(() => {
   releaseLock()
 })
 
+/** End: a small confirm, then stop the session (time so far is kept) and go back to Today. */
+const confirmEnd = ref(false)
+async function endSession() {
+  await endEarly()
+  toast.add({ title: t('focus.ended') })
+  await navigateTo('/today')
+}
+
 async function leave(markDone: boolean) {
   await finish(markDone)
   await navigateTo('/')
@@ -54,7 +63,7 @@ const solid = 'flex h-[58px] w-full items-center justify-center gap-2.5 rounded-
       <template v-if="focus">
         <div class="flex w-full items-center justify-between">
           <span class="text-[13px] font-medium text-nighttext">{{ phase === 'break' || phase === 'break-done' ? t('focus.breakTitle') : t('focus.session', { n: focus.sessionNo, total: focus.sessionsPlanned }) }}</span>
-          <button v-if="phase === 'focus'" type="button" class="flex h-11 items-center rounded-full border border-nightline px-4 text-[13px] font-medium text-nighttext" data-testid="focus-end" @click="openCapture('task')">
+          <button v-if="phase === 'focus'" type="button" class="flex h-11 items-center rounded-full border border-nightline px-4 text-[13px] font-medium text-nighttext" data-testid="focus-end" @click="confirmEnd = true">
             {{ t('focus.end') }}
           </button>
         </div>
@@ -131,5 +140,6 @@ const solid = 'flex h-[58px] w-full items-center justify-center gap-2.5 rounded-
         <NuxtLink to="/" class="mt-2 flex h-[52px] items-center justify-center rounded-2xl bg-cream px-6 text-[15px] font-semibold text-night">{{ t('focus.backToday') }}</NuxtLink>
       </div>
     </div>
+    <ConfirmModal v-model:open="confirmEnd" :title="t('capture.needStop')" :body="t('capture.minLeft', { n: Math.ceil(remainingMs / 60000) })" :confirm-label="t('capture.endSession')" danger @confirm="endSession" />
   </div>
 </template>

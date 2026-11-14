@@ -250,16 +250,17 @@ await step('focus completes → session logged, in-app notification, break offer
   return /1 នៃ 4 វគ្គ/.test(sessions) ? 'Today shows "1 នៃ 4 វគ្គ"' : false
 })
 
-await step('End early from the capture sheet shows minutes left and ends the session', async () => {
+await step('End on the focus page asks to confirm (minutes left), then ends the session — no create form', async () => {
   await tid('start-focus').click()
   await tid('page-focus').waitFor()
   await tid('focus-end').click()
-  await tid('end-session').waitFor()
+  await tid('confirm-yes').waitFor()
   await settle()
   const txt = await page.locator('[role="dialog"]').innerText()
-  await tid('end-session').click()
+  if (await tid('capture-text').count()) throw new Error('create form opened')
+  await tid('confirm-yes').click()
   await tid('page-today').waitFor()
-  return /45 នាទី|44 នាទី/.test(txt)
+  return /45 នាទី|44 នាទី/.test(txt) && new URL(page.url()).pathname === '/today'
 })
 
 await step('add a reminder (tomorrow) → listed, shown on Today; it is a task too (no Task/Reminder tabs)', async () => {

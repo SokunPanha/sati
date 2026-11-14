@@ -8,11 +8,10 @@ const toast = useToast()
 const fmt = useFmt()
 const { sheets } = useSheets()
 const { capture } = useTasks()
-const { focus, remainingMs, endEarly } = useFocus()
+const { focus } = useFocus()
 const { form, isHabit, toTop, effectiveBox, reset, valid, apply, saveLabel } = useTaskForm()
 
 const inFocus = computed(() => focus.value?.phase === 'focus')
-const minutesLeft = computed(() => Math.ceil(remainingMs.value / 60000))
 /** editing an existing reminder (opened from the Reminders page) */
 const editingReminder = computed(() => !!sheets.reminderId)
 
@@ -50,14 +49,6 @@ async function saveTask() {
   } as any)
 }
 
-async function stopSession() {
-  if (form.title.trim() && valid()) await create()
-  await endEarly()
-  sheets.capture = false
-  toast.add({ title: t('focus.ended') })
-  await navigateTo('/today')
-}
-
 const title = computed(() => editingReminder.value ? t('reminder.editTitle') : t('capture.title'))
 </script>
 
@@ -86,19 +77,6 @@ const title = computed(() => editingReminder.value ? t('reminder.editTitle') : t
       />
 
       <UButton block size="xl" class="h-14 rounded-2xl text-[16px] font-semibold disabled:opacity-50" :disabled="!form.title.trim()" :label="inFocus ? t('capture.saveKeep') : saveLabel" data-testid="capture-save" @click="saveTask" />
-
-      <template v-if="inFocus">
-        <div class="h-px bg-rule" />
-        <div class="flex items-center gap-3">
-          <div class="flex grow flex-col gap-0.5">
-            <span class="text-[14px] font-semibold">{{ t('capture.needStop') }}</span>
-            <span class="text-[13px] text-soft">{{ t('capture.minLeft', { n: minutesLeft }) }}</span>
-          </div>
-          <button type="button" class="h-11 shrink-0 rounded-xl border border-b1-line px-4 text-[14px] font-semibold text-b1-tx" data-testid="end-session" @click="stopSession">
-            {{ t('capture.endSession') }}
-          </button>
-        </div>
-      </template>
     </template>
 
     <template v-else>
