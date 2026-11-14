@@ -81,7 +81,7 @@ export default defineNuxtConfig({
       description: 'ចិត្តស្ងប់ ផ្ដោតលើរឿងម្ដងមួយ · Calm mind. One thing at a time.',
       lang: 'km',
       dir: 'ltr',
-      start_url: '/',
+      start_url: '/today',
       scope: '/',
       display: 'standalone',
       orientation: 'portrait',
@@ -94,7 +94,7 @@ export default defineNuxtConfig({
         { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
       ],
       shortcuts: [
-        { name: 'ថ្ងៃនេះ · Today', url: '/', icons: [{ src: '/icons/pwa-192.png', sizes: '192x192' }] },
+        { name: 'ថ្ងៃនេះ · Today', url: '/today', icons: [{ src: '/icons/pwa-192.png', sizes: '192x192' }] },
         { name: 'ការរំលឹក · Reminders', url: '/reminders', icons: [{ src: '/icons/pwa-192.png', sizes: '192x192' }] }
       ]
     },

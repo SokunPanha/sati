@@ -55,7 +55,7 @@ async function stopSession() {
   await endEarly()
   sheets.capture = false
   toast.add({ title: t('focus.ended') })
-  await navigateTo('/')
+  await navigateTo('/today')
 }
 
 const title = computed(() => editingReminder.value ? t('reminder.editTitle') : t('capture.title'))

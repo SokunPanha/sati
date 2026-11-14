@@ -34,6 +34,7 @@
     "noTop3Title": "No Top {top} yet",
     "noTop3Body": "Pick up to three tasks that matter most today. Everything else can wait.",
     "pickFromPlan": "Pick from Plan",
+    "addTask": "Add a task",
     "sortInbox": "Sort inbox ({n})",
     "emptyStart": "Nothing here yet. Add your first task below.",
     "allDoneTitle": "Top {top} done",

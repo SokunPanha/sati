@@ -4,7 +4,7 @@ const { t } = useI18n()
 const route = useRoute()
 const { openCapture } = useSheets()
 const left = computed(() => [
-  { to: '/', label: t('tabs.today'), icon: 'i-lucide-circle-dot' },
+  { to: '/today', label: t('tabs.today'), icon: 'i-lucide-circle-dot' },
   { to: '/plan', label: t('tabs.plan'), icon: 'i-lucide-layout-grid' }
 ])
 const right = computed(() => [

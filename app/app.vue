@@ -8,8 +8,8 @@ const focus = useFocus()
 const scheduler = useScheduler()
 const fmt = useFmt()
 const route = useRoute()
-/** Full-width pages (the landing page, also "/" without a profile) skip the phone column and the app splash. */
-const wide = computed(() => !!route.meta.wide || (route.path === '/' && !active.value))
+/** Full-width pages (the landing page) skip the phone column and the app splash. */
+const wide = computed(() => !!route.meta.wide)
 
 const splash = ref(true)
 

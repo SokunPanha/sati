@@ -31,7 +31,7 @@ async function createFirst() {
 
 async function done() {
   await requireDb().settings.put({ key: 'notifAsked', value: true })
-  await navigateTo('/', { replace: true })
+  await navigateTo('/today', { replace: true })
 }
 async function allow() {
   await notify.requestPermission()

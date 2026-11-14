@@ -194,15 +194,16 @@ await step('add tasks to Top 3 from Plan', async () => {
   await shot('05-plan-km')
 })
 
-await step('Today shows Up next, rest of Top 3 and the daily routine', async () => {
+await step('Today (/ → /today): one Top list with ▶ on the next task, and the daily routine', async () => {
   await page.goto(BASE + '/')
-  await tid('hero').waitFor()
-  const title = await tid('hero-title').innerText()
+  await tid('start-focus').waitFor()
+  const path = new URL(page.url()).pathname
+  const title = await tid('top3-row').filter({ has: tid('start-focus') }).innerText()
   const rows = await tid('top3-row').count()
   const tiles = await tid('routine-tile').count()
   await settle(900)
   await shot('06-today-km')
-  return title.includes('k3s') && rows === 1 && tiles === 1 ? `hero="${title}", rest=${rows}, routines=${tiles}` : false
+  return path === '/today' && title.includes('k3s') && rows === 2 && tiles === 1 ? `path=${path}, next="${title.split('\n')[0]}", top=${rows}, routines=${tiles}` : false
 })
 
 await step('start focus: countdown runs, pause/resume, capture during focus', async () => {
@@ -359,7 +360,7 @@ await step('profiles: create a second profile with a PIN, data is separate, PIN 
   await tid('profile-ដារ៉ា').waitFor()
   await settle()
   await tid('profile-ដារ៉ា').click()
-  await tid('hero').waitFor()
+  await tid('start-focus').waitFor()
   await page.goto(BASE + '/settings')
   await page.locator('button', { hasText: 'កំណត់លេខ PIN' }).click()
   await page.locator('[data-testid="page-settings"] input[type="password"]').fill('2468')
@@ -381,7 +382,7 @@ await step('profiles: create a second profile with a PIN, data is separate, PIN 
   await page.locator('[role="alert"]').waitFor()
   await tid('pin-input').fill('2468')
   await tid('pin-input').press('Enter')
-  await tid('hero').waitFor()
+  await tid('start-focus').waitFor()
   const dbs = await page.evaluate(async () => (await indexedDB.databases()).map(d => d.name).sort())
   return emptyToday && dbs.filter(n => n.startsWith('sati-p-')).length === 2 && dbs.includes('sati-meta') ? dbs.join(', ') : false
 })

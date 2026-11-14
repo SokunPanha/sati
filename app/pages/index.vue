@@ -1,10 +1,9 @@
 <script setup lang="ts">
-// "/" is the app's Today screen. A browser visitor without a profile sees the install landing page here
-// instead (the installed app goes to the welcome flow; see the profile middleware).
-const { active } = useProfile()
+// "/" is the install landing page for browser visitors without a profile. With a profile (or in the installed
+// app) the profile middleware sends "/" on to /today or /welcome, so this page only ever shows the landing page.
+definePageMeta({ wide: true })
 </script>
 
 <template>
-  <TodayPage v-if="active" />
-  <LandingPage v-else />
+  <LandingPage />
 </template>

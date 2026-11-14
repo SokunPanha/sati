@@ -13,7 +13,7 @@ const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' 
 const detected: Platform = isIOS ? 'iphone' : /Android/i.test(ua) ? 'android' : 'desktop'
 const { isStandalone: standalone } = useNotify()
 /** "/" shows this page until a profile exists, so the app itself starts at the welcome flow. */
-const appLink = computed(() => active.value ? '/' : '/welcome')
+const appLink = computed(() => active.value ? '/today' : '/welcome')
 
 const tab = ref<Platform>(detected)
 const justInstalled = ref(false)
