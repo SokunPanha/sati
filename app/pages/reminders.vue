@@ -21,7 +21,7 @@ const groups = computed(() => {
 })
 function alertText(r: Reminder) {
   const a = r.alertBefore === 0 ? t('reminders.alertOnTime') : r.alertBefore === 60 ? t('reminders.alertHour') : t('reminders.alertBefore', { n: r.alertBefore })
-  return r.repeat === 'none' ? a : `${t(`repeat.${r.repeat}`)} · ${a}`
+  return [r.repeat !== 'none' && t(`repeat.${r.repeat}`), a, r.focusMin && t('reminders.focus', { n: r.focusMin })].filter(Boolean).join(' · ')
 }
 const dayLabel = (day: string) => day === runtime.today ? `${t('common.today')} · ${fmt.date(day)}` : day === addDays(runtime.today, 1) ? `${t('common.tomorrow')} · ${fmt.date(day)}` : fmt.date(day)
 </script>

@@ -11,12 +11,14 @@ const toast = useToast()
 const { sheets } = useSheets()
 const { capture, sort, addToTop3 } = useTasks()
 const { focus, remainingMs, endEarly } = useFocus()
+const { settings } = useSettings()
 
 const text = ref('')
 const description = ref('')
 const picked = ref<Box | null>(null)
 const repeatType = ref<Repeat['type']>('none')
 const repeatDays = ref<number[]>([])
+const sessionMin = ref(settings.value.focusMin)
 const isHabit = computed(() => repeatType.value !== 'none')
 /** also put it in today's Top list (not for habits: they never use a Top slot) */
 const addTop = ref(false)
@@ -42,11 +44,12 @@ watch(() => sheets.capture, (open) => {
   addTop.value = false
   repeatType.value = 'none'
   repeatDays.value = []
+  sessionMin.value = settings.value.focusMin
 })
 
 /** Capture, and file it right away when a box / Repeat / Top was chosen. Returns false if the Top list was full. */
 async function captureAndSort() {
-  const task = await capture(text.value, description.value)
+  const task = await capture(text.value, description.value, sessionMin.value)
   if (!task || !box.value) return true
   await sort(task.id, {
     title: task.title,
@@ -143,6 +146,7 @@ const title = computed(() => mode.value === 'task'
         <BoxPicker v-model="picked" optional :habit="isHabit" testid="capture" />
       </div>
       <RepeatPicker v-model:type="repeatType" v-model:days="repeatDays" />
+      <FocusTimePicker v-model="sessionMin" testid="capture" />
       <button
         v-if="!isHabit"
         type="button"

@@ -6,8 +6,13 @@ const { t } = useI18n()
 
 const options = computed(() => {
   const list = props.optional ? [0, 15, 25, 30, 45, 60] : [15, 25, 30, 45, 60, 90]
-  // keep a custom value (e.g. a different default from Settings) selectable
-  if (minutes.value && !list.includes(minutes.value)) list.splice(list.findIndex(n => n > minutes.value) >>> 0, 1, minutes.value)
+  // keep a custom value (e.g. a different default from Settings) selectable: it takes the nearest chip's place
+  const cur = minutes.value
+  if (cur && !list.includes(cur)) {
+    let near = props.optional ? 1 : 0
+    for (let i = near; i < list.length; i++) if (Math.abs(list[i]! - cur) < Math.abs(list[near]! - cur)) near = i
+    list[near] = cur
+  }
   return list.sort((a, b) => a - b)
 })
 </script>

@@ -10,6 +10,7 @@
   "tabs": { "today": "Today", "plan": "Plan", "review": "Review", "add": "Add", "settings": "Settings" },
   "splash": { "tagline": "Calm mind. One thing at a time.", "loading": "Loading" },
   "repeat": { "label": "Repeat", "never": "Never", "daily": "Daily", "weekdays": "Weekdays", "pick": "Pick days", "weekly": "Weekly", "monthly": "Monthly" },
+  "focusTime": { "label": "Focus time", "none": "None" },
   "today": {
     "title": "Today",
     "sessionsOf": "{done} of {goal} sessions",
@@ -208,7 +209,8 @@
     "hint": "Tap a reminder to edit or delete it.",
     "alertOnTime": "Alert on time",
     "alertBefore": "Alert {n} min before",
-    "alertHour": "Alert 1 hour before"
+    "alertHour": "Alert 1 hour before",
+    "focus": "{n} min focus"
   },
   "reminder": {
     "newTitle": "New reminder",
@@ -234,6 +236,7 @@
     "earlier": "Earlier",
     "gotIt": "Got it",
     "startFocus": "Start focus",
+    "startFocusMin": "Focus {n} min",
     "open": "Open",
     "emptyTitle": "No notifications",
     "emptyBody": "Reminders and nudges will show up here.",

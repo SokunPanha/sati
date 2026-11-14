@@ -4,7 +4,7 @@ import type { AppNotification, NotifKind } from '~/types'
 const { t } = useI18n()
 const fmt = useFmt()
 const { tasks } = useTasks()
-const { start } = useFocus()
+const { start, startBatch } = useFocus()
 
 const { data: all } = useLiveQuery(db => db.notifications.orderBy('at').reverse().limit(80).toArray(), [] as AppNotification[])
 const fresh = computed(() => all.value.filter(n => !n.read))
@@ -43,6 +43,13 @@ async function focusOn(n: AppNotification) {
   await start(task)
   await navigateTo('/focus')
 }
+/** A reminder with a focus time: start a session for it (no task attached). */
+async function focusReminder(n: AppNotification) {
+  await read(n)
+  if (!n.focusMin) return
+  await startBatch([], n.title, n.focusMin)
+  await navigateTo('/focus')
+}
 async function markAll() {
   await requireDb().notifications.filter(n => !n.read).modify({ read: true })
 }
@@ -72,13 +79,21 @@ async function clearEarlier() {
         <button type="button" class="flex min-h-[44px] items-center text-[13px] font-medium text-brand" @click="markAll">{{ t('notifs.markAll') }}</button>
       </div>
       <template v-for="n in fresh" :key="n.id">
-        <div v-if="n.kind === 'reminder'" class="flex items-center gap-3 rounded-2xl bg-rem-bg p-3.5" data-testid="notif-new">
+        <div v-if="n.kind === 'reminder'" class="flex gap-3 rounded-2xl bg-rem-bg p-3.5" :class="n.focusMin ? '' : 'items-center'" data-testid="notif-new">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-rem"><UIcon name="i-lucide-alarm-clock" class="size-5" /></span>
-          <div class="flex min-w-0 grow flex-col gap-0.5">
-            <span class="text-[15px] font-semibold text-rem-tx">{{ n.title }}</span>
-            <span class="text-[12px] text-rem-tx">{{ n.body }}</span>
+          <div class="flex min-w-0 grow flex-col gap-2">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[15px] font-semibold text-rem-tx">{{ n.title }}</span>
+              <span class="text-[12px] text-rem-tx">{{ n.body }}</span>
+            </div>
+            <div v-if="n.focusMin" class="flex flex-wrap gap-2">
+              <button type="button" class="flex h-11 items-center gap-1.5 whitespace-nowrap rounded-[10px] bg-rem px-3.5 text-[13px] font-semibold text-white" data-testid="notif-reminder-focus" @click="focusReminder(n)">
+                <UIcon name="i-lucide-play" class="size-4" />{{ t('notifs.startFocusMin', { n: n.focusMin }) }}
+              </button>
+              <button type="button" class="flex h-11 items-center whitespace-nowrap rounded-[10px] bg-white px-3.5 text-[13px] font-medium text-rem-tx" @click="read(n)">{{ t('notifs.gotIt') }}</button>
+            </div>
           </div>
-          <button type="button" class="h-11 shrink-0 rounded-[10px] bg-white px-3 text-[12px] font-semibold text-rem-tx" @click="read(n)">{{ t('notifs.gotIt') }}</button>
+          <button v-if="!n.focusMin" type="button" class="h-11 shrink-0 rounded-[10px] bg-white px-3 text-[12px] font-semibold text-rem-tx" @click="read(n)">{{ t('notifs.gotIt') }}</button>
         </div>
         <div v-else class="card flex gap-3 p-3.5" data-testid="notif-new">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-xl" :style="{ background: tone(n.kind).bg, color: tone(n.kind).fg }"><UIcon :name="ICONS[n.kind]" class="size-5" /></span>

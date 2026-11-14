@@ -14,6 +14,8 @@ const date = ref(runtime.today)
 const time = ref('09:00')
 const alertBefore = ref(0)
 const repeat = ref<Reminder['repeat']>('none')
+/** 0 = no focus session (the default for reminders) */
+const focusMin = ref(0)
 const dateInput = ref<HTMLInputElement | null>(null)
 
 function nextHour() {
@@ -30,6 +32,7 @@ function reset() {
     time.value = cur.time
     alertBefore.value = cur.alertBefore
     repeat.value = cur.repeat
+    focusMin.value = cur.focusMin ?? 0
   }
   else {
     const n = nextHour()
@@ -38,6 +41,7 @@ function reset() {
     time.value = n.time
     alertBefore.value = 0
     repeat.value = 'none'
+    focusMin.value = 0
   }
 }
 watch(() => props.reminderId, reset, { immediate: true })
@@ -67,7 +71,7 @@ async function submit() {
   }
   const at = atTime(date.value, time.value)
   await save(
-    { title: clean, date: date.value, time: time.value, alertBefore: alertBefore.value, repeat: repeat.value },
+    { title: clean, date: date.value, time: time.value, alertBefore: alertBefore.value, repeat: repeat.value, focusMin: focusMin.value },
     props.reminderId,
     { title: alertBefore.value ? t('notif.reminderIn', { title: clean, n: alertBefore.value }) : clean, body: t('notif.reminderBody', { time: fmt.time(at) }) }
   )
@@ -135,6 +139,8 @@ const chipOn = 'bg-rem font-semibold text-white'
       <span class="text-[13px] font-semibold">{{ t('repeat.label') }}</span>
       <SegmentedControl v-model="repeat" :options="repeatOptions" tone="dark" :label="t('repeat.label')" />
     </div>
+
+    <FocusTimePicker v-model="focusMin" optional testid="reminder" />
 
     <UButton type="submit" block size="xl" class="h-[54px] rounded-2xl bg-rem text-[16px] font-semibold text-white hover:bg-rem-tx disabled:bg-rem/50" :disabled="!title.trim()" :label="t('reminder.save')" data-testid="reminder-save" />
     <span class="-mt-1.5 text-center text-[12px] text-soft">{{ t('reminder.note', { top: topN }) }}</span>
