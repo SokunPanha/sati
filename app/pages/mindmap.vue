@@ -63,6 +63,26 @@ const THEME = {
   }
 }
 
+/** Same map colours, darker page and ideas in dark mode. */
+const { isDark } = useTheme()
+const DARK_VARS = {
+  '--main-color': '#ECEAE4',
+  '--main-bgcolor': '#1B2321',
+  '--color': '#D6D3CC',
+  '--bgcolor': '#121816',
+  '--selected': '#3FB8A3',
+  '--accent-color': '#3FB8A3',
+  '--root-color': '#FFFFFF',
+  '--root-bgcolor': '#1F8C7D',
+  '--panel-color': '236, 234, 228',
+  '--panel-bgcolor': '27, 35, 33',
+  '--panel-border-color': '#38423E'
+}
+const themeNow = () => (isDark.value
+  ? { ...THEME, name: 'Sati dark', type: 'dark' as const, cssVar: { ...THEME.cssVar, ...DARK_VARS } }
+  : THEME)
+watch(isDark, () => mind?.changeTheme(themeNow()))
+
 function close() {
   if (timer) void flush()
   mind?.destroy()
@@ -84,7 +104,7 @@ function open(id: string) {
     keypress: true,
     allowUndo: true,
     newTopicName: t('mindmap.newIdea'),
-    theme: THEME,
+    theme: themeNow(),
     scaleMin: 0.3,
     scaleMax: 2.5
   })
@@ -242,6 +262,7 @@ async function saveFile(file: File) {
 
 const menu = computed(() => [[
   { label: t('mindmap.exportPdf'), icon: 'i-lucide-file-down', onSelect: exportPdf },
+  { label: t('mindmap.exportPng'), icon: 'i-lucide-image-down', onSelect: exportPng },
   { label: t('mindmap.deleteMap'), icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => deleteMap(openedId) }
 ]])
 
@@ -255,11 +276,59 @@ onBeforeUnmount(() => {
   close()
 })
 
+// ---------------------------------------------------------------- colour an idea
+const SWATCHES = [
+  { key: 'none', bg: '', fg: '' },
+  { key: 'orange', bg: '#FBE9DF', fg: '#8A3409' },
+  { key: 'green', bg: '#E3F0EC', fg: '#0A4F48' },
+  { key: 'yellow', bg: '#F6EDCF', fg: '#5E4900' },
+  { key: 'blue', bg: '#E6EEF8', fg: '#1D4F86' },
+  { key: 'violet', bg: '#ECE8F7', fg: '#5B4BA8' },
+  { key: 'pink', bg: '#FCE7F0', fg: '#9D2C5F' }
+]
+const colouring = ref(false)
+function toggleColours() {
+  if (!ensureSelection()) return
+  colouring.value = !colouring.value
+}
+async function paint(s: typeof SWATCHES[number]) {
+  if (!mind?.currentNodes?.length) return
+  for (const tpc of [...mind.currentNodes]) {
+    const cur = { ...(tpc.nodeObj?.style || {}) } as Record<string, string>
+    delete cur.background
+    delete cur.color
+    await mind.reshapeNode(tpc, { style: s.bg ? { ...cur, background: s.bg, color: s.fg } : cur })
+  }
+  colouring.value = false
+  scheduleSave()
+}
+
+/** The whole map as a PNG (share sheet on phones, download on computers). */
+async function exportPng() {
+  if (!mind || exporting.value) return
+  exporting.value = true
+  try {
+    await flush()
+    const { exportImageBlob } = await import('@mind-elixir/export-mindmap')
+    const png = await exportImageBlob(mind, 'png', { scale: 2, watermarkEnabled: false })
+    const name = `${(current.value?.title || 'mind-map').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) || 'mind-map'}.png`
+    await saveFile(new File([png], name, { type: 'image/png' }))
+  }
+  catch (e) {
+    console.error('[sati] export png', e)
+    toast.add({ title: t('mindmap.exportFailed'), color: 'error' })
+  }
+  finally {
+    exporting.value = false
+  }
+}
+
 const actions = computed(() => [
   { key: 'child', icon: 'i-lucide-git-branch-plus', label: t('mindmap.addChild'), run: addChild, disabled: false },
   { key: 'sibling', icon: 'i-lucide-list-plus', label: t('mindmap.addSibling'), run: addSibling, disabled: false },
   { key: 'edit', icon: 'i-lucide-pencil', label: t('mindmap.edit'), run: edit, disabled: false },
   { key: 'task', icon: 'i-lucide-square-check-big', label: t('mindmap.makeTask'), run: makeTask, disabled: false },
+  { key: 'colour', icon: 'i-lucide-palette', label: t('mindmap.colour'), run: toggleColours, disabled: false },
   { key: 'delete', icon: 'i-lucide-trash-2', label: t('mindmap.delete'), run: removeIdeas, disabled: !selected.value || (rootSelected.value && selected.value === 1) },
   { key: 'undo', icon: 'i-lucide-undo-2', label: t('mindmap.undo'), run: undo, disabled: false }
 ])
@@ -285,7 +354,12 @@ const actions = computed(() => [
 
     <div ref="el" class="map min-h-0 grow" data-testid="mindmap-canvas" />
 
-    <div class="grid grid-cols-6 border-t border-rule bg-white px-0.5 pb-6" role="toolbar" :aria-label="t('tabs.mindmap')">
+    <div v-if="colouring" class="flex items-center justify-center gap-2 border-t border-rule bg-card px-3 py-2.5" role="group" :aria-label="t('mindmap.colour')" data-testid="mindmap-swatches">
+      <button v-for="s in SWATCHES" :key="s.key" type="button" class="flex size-9 items-center justify-center rounded-full border-2" :style="{ background: s.bg || 'var(--color-card)', borderColor: s.fg || 'var(--color-edge)' }" :aria-label="t(`mindmap.swatch.${s.key}`)" :data-testid="`swatch-${s.key}`" @click="paint(s)">
+        <UIcon v-if="!s.bg" name="i-lucide-ban" class="size-4 text-soft" />
+      </button>
+    </div>
+    <div class="grid grid-cols-7 border-t border-rule bg-card px-0.5 pb-6" role="toolbar" :aria-label="t('tabs.mindmap')">
       <button
         v-for="a in actions"
         :key="a.key"
@@ -326,7 +400,7 @@ const actions = computed(() => [
       </div>
     </div>
 
-    <div v-else-if="loaded" class="flex flex-col items-center gap-3 rounded-[22px] bg-white p-6 text-center" data-testid="mindmap-empty">
+    <div v-else-if="loaded" class="flex flex-col items-center gap-3 rounded-[22px] bg-card p-6 text-center" data-testid="mindmap-empty">
       <span class="flex size-14 items-center justify-center rounded-full bg-brand-tint text-brand"><UIcon name="i-lucide-network" class="size-7" /></span>
       <UButton block size="xl" class="h-[52px] whitespace-nowrap rounded-[14px] text-[15px] font-semibold" icon="i-lucide-plus" :label="t('mindmap.newMap')" data-testid="mindmap-new" @click="newMap" />
     </div>

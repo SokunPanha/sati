@@ -9,10 +9,11 @@
   "dur": { "h": "{n}h", "m": "{n}m" },
   "box": { "1": "Do now", "2": "Schedule", "3": "Limit", "4": "Drop", "n": "Box {n}", "pick": "Which box?" },
   "boxShort": { "1": "Do now", "2": "Schedule", "3": "Limit", "4": "Drop" },
+  "steps": { "title": "Steps", "step": "Step", "add": "Add a step", "progress": "{done}/{total}" },
   "tabs": { "today": "Today", "plan": "Plan", "mindmap": "Mind map", "review": "Tomorrow", "history": "History", "add": "Add", "settings": "Settings" },
   "splash": { "tagline": "Calm mind. One thing at a time.", "loading": "Loading" },
   "repeat": { "label": "Repeat", "never": "Never", "daily": "Daily", "weekdays": "Weekdays", "pick": "Pick days", "weekly": "Weekly", "monthly": "Monthly" },
-  "mindmap": { "deleted": "Deleted “{title}”", "makeTask": "Task", "title": "Mind map", "new": "New", "newMap": "New mind map", "newIdea": "New idea", "ideas": "{n} ideas", "addChild": "Sub-idea", "addSibling": "Next", "edit": "Edit", "delete": "Delete", "undo": "Undo", "fit": "Fit to screen", "deleteMap": "Delete mind map", "deleteMapTitle": "Delete this mind map?", "more": "More", "exportPdf": "Export PDF", "exportFailed": "Could not export the PDF" },
+  "mindmap": { "colour": "Colour", "exportPng": "Export image", "swatch": {"none": "No colour", "orange": "Orange", "green": "Green", "yellow": "Yellow", "blue": "Blue", "violet": "Violet", "pink": "Pink"}, "deleted": "Deleted “{title}”", "makeTask": "Task", "title": "Mind map", "new": "New", "newMap": "New mind map", "newIdea": "New idea", "ideas": "{n} ideas", "addChild": "Sub-idea", "addSibling": "Next", "edit": "Edit", "delete": "Delete", "undo": "Undo", "fit": "Fit to screen", "deleteMap": "Delete mind map", "deleteMapTitle": "Delete this mind map?", "more": "More", "exportPdf": "Export PDF", "exportFailed": "Could not export the PDF" },
   "focusTime": { "label": "Focus time", "none": "None" },
   "today": { "doneToday": "Done today ({n})",
     "title": "Today",
@@ -52,7 +53,7 @@
     "notificationsNew": "Notifications, {n} new",
     "switchProfile": "Profile: {name}. Switch profile"
   },
-  "focus": {
+  "focus": { "add5": "Add 5 minutes",
     "session": "Session {n} of {total}",
     "end": "End",
     "onMind": "Something on your mind?",
@@ -88,14 +89,14 @@
     "reminder": "Reminder",
     "remind": "Remind me",
     "reminderHint": "Reminder = pick a date and time, get an alert. No focus needed.",
-    "save": "Save to inbox",
+    "save": "Save",
     "saveKeep": "Save & keep focusing",
     "needStop": "Need to stop?",
     "minLeft": "{n} min left. Only if it's truly urgent.",
     "endSession": "End session",
     "saved": "Saved to inbox", "sortNow": "Which box?", "pickBox": "Pick a box to save.", "sortLater": "Pick nothing to sort it later from the inbox.", "saveTo": "Save to {name}", "savedTo": "Saved to {name}", "saveHabit": "Save habit", "savedHabit": "Saved to your habits"
   },
-  "plan": { "cleared": "Cleared {n} from Drop",
+  "plan": { "search": "Search", "searchPlaceholder": "Search tasks and habits", "noResults": "Nothing found", "cleared": "Cleared {n} from Drop",
     "subtitle": "All your tasks, by priority",
     "title": "Plan",
     "inbox": "Inbox: {n} to sort",
@@ -109,7 +110,7 @@
     "batch": "Batch in 1 block",
     "batchTitle": "Batch: {n} small tasks",
     "clearAll": "Clear all",
-    "clearTitle": "Clear box 4?",
+    "clearTitle": "Clear Drop?",
     "clearBody": "{n} tasks in \"Drop\" will be deleted.",
     "tapHint": "Tap a task to add it to Top {top}, edit or move it",
     "empty": "Empty",
@@ -120,7 +121,7 @@
     "emptyTitle": "Your plan is empty",
     "emptyBody": "Capture tasks and ideas below, then sort them into the four boxes."
   },
-  "task": {
+  "task": { "makeNext": "Make it Up next", "last5Weeks": "Last 5 weeks",
     "addNote": "Note",
     "chipFocus": "Focus", "chipTop": "Top {top}", "chipRemind": "Remind",
     "addTop3": "Add to today's Top {top}",
@@ -164,6 +165,11 @@
     "pickDays": "Pick at least one day"
   },
   "review": {
+    "weekTitle": "Your week",
+    "weekDone": "tasks done",
+    "weekFocus": "focused",
+    "weekHabits": "habits kept",
+    "weekDrop": "{n} still in Drop. Let them go?",
     "title": "Plan tomorrow",
     "history": "History",
     "summary": "{done}/{total} done · {time} focus",
@@ -175,12 +181,12 @@
     "addFrom": "Add from your tasks",
     "emptyTomorrow": "Nothing planned for tomorrow yet.",
     "pickMore": "+ Pick {n} more from Plan",
-    "noSuggestions": "Nothing to suggest yet. Sort your inbox first.",
+    "noSuggestions": "Nothing to suggest yet. Add a task first.",
     "pickerTitle": "Pick for tomorrow",
     "pickerSub": "Up to {top} tasks.",
     "pickerEmpty": "No sorted tasks to pick from."
   },
-  "history": {
+  "history": { "reopen": "Reopen", "reopened": "Reopened “{title}”",
     "title": "History",
     "filter": "Filter",
     "day": "Day", "week": "Week", "month": "Month", "custom": "Custom",
@@ -188,13 +194,13 @@
     "chartHint": "Focus time per day · tap a day to see it",
     "tasksDone": "Tasks done",
     "focusTime": "Focus time",
-    "inBox2": "In box 2",
+    "inBox2": "In Schedule",
     "noData": "Nothing logged in this period.",
     "done": "Done",
     "routine": "Routine",
     "endedEarly": "ended early",
     "notFinished": "Not finished · moved to {date}",
-    "captured": "1 idea captured | {n} ideas captured",
+    "captured": "1 task created | {n} tasks created",
     "earlyCount": "1 session ended early | {n} sessions ended early",
     "focusOfDay": "{time} focus",
     "allBoxes": "All boxes",
@@ -232,7 +238,7 @@
     "deleted": "Reminder deleted",
     "pastWarn": "That time has already passed. Pick a later time."
   },
-  "notifs": {
+  "notifs": { "readAll": "Mark all as read",
     "title": "Notifications",
     "new": "New",
     "earlier": "Earlier",
@@ -254,8 +260,8 @@
     "morningBody": "Choose the three things that matter most today.",
     "morningBodyReady": "Your Top {top} is ready ({n}). Start with the first one.",
     "eveningTitle": "Close the day",
-    "eveningBody": "3 quick steps: see your day, empty the inbox, pick tomorrow's Top {top}.",
-    "box2Title": "No box 2 session yet",
+    "eveningBody": "2 quick steps: see your day, then pick tomorrow's Top {top}.",
+    "box2Title": "No Schedule session yet",
     "box2Body": "\"{title}\" is waiting. {n} minutes now moves you forward.",
     "routineTitle": "{n} routines left today",
     "routineTitleOne": "Keep your {title} streak",
@@ -274,6 +280,9 @@
     "testBody": "If you can see and hear this, alerts work on this device."
   },
   "profiles": {
+    "forgotPin": "Forgot PIN?",
+    "forgotTitle": "Delete {name}?",
+    "forgotBody": "A PIN can't be recovered: Sati keeps no copy anywhere. The only way out is to delete this profile and all its data on this device. A backup file can bring it back.",
     "title": "Profiles",
     "sub": "Each profile has its own tasks, routines and stats.",
     "newProfile": "New profile",
@@ -330,6 +339,7 @@
     "notInstalled": "Not installed yet: running in the browser."
   },
   "settings": {
+    "theme": {"label": "Look", "light": "Light", "dark": "Dark", "auto": "Auto"},
     "app": "App", "checkUpdate": "Check for update", "checking": "Checking…", "upToDate": "You have the latest version", "updating": "Updating… the app will reload", "updateOffline": "You're offline. Connect and try again.", "updateFailed": "Couldn't check right now. Try again.",
     "title": "Profile & settings",
     "tapPhoto": "Tap photo to change",

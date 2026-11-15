@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FocusSession, HistoryEvent, Task } from '~/types'
+import type { FocusSession, HistoryEvent, RoutineLog, Task } from '~/types'
 
 // Plan tomorrow: one job — build tomorrow's Top N. It mirrors the day rollover (rolloverTop3): tasks planned for
 // tomorrow come first, then today's unfinished Top tasks fill the room that is left (they move by themselves).
@@ -8,7 +8,8 @@ const { t } = useI18n()
 const topN = useTopN()
 const fmt = useFmt()
 const toast = useToast()
-const { top3, active, planFor, unplan } = useTasks()
+const { top3, active, routines, byBox, clearBox, planFor, unplan } = useTasks()
+const { settings } = useSettings()
 
 const { data: sessions } = useLiveQuery(db => db.sessions.where('date').equals(runtime.today).toArray(), [] as FocusSession[], [() => runtime.today])
 const { data: events } = useLiveQuery(db => db.events.where('date').equals(runtime.today).toArray(), [] as HistoryEvent[], [() => runtime.today])
@@ -35,6 +36,36 @@ const candidates = computed(() => {
   return active.value.filter(x => !x.isRoutine && !taken.has(x.id)).sort((a, b) => a.box - b.box)
 })
 
+// ---- Weekly review: on the last day of the week, a look back before planning the next one ----
+const weekFrom = computed(() => startOfWeek(runtime.today, settings.value.weekStart))
+const isWeekEnd = computed(() => addDays(weekFrom.value, 6) === runtime.today)
+const { data: weekEvents } = useLiveQuery(db => db.events.where('date').between(weekFrom.value, runtime.today, true, true).toArray(), [] as HistoryEvent[], [() => weekFrom.value, () => runtime.today])
+const { data: weekSessions } = useLiveQuery(db => db.sessions.where('date').between(weekFrom.value, runtime.today, true, true).toArray(), [] as FocusSession[], [() => weekFrom.value, () => runtime.today])
+const { data: weekLogs } = useLiveQuery(db => db.routineLogs.where('date').between(weekFrom.value, runtime.today, true, true).toArray(), [] as RoutineLog[], [() => weekFrom.value, () => runtime.today])
+const week = computed(() => {
+  let due = 0
+  for (let i = 0; i < 7; i++) {
+    const day = addDays(weekFrom.value, i)
+    if (day > runtime.today) break
+    due += routines.value.filter(r => ymd(r.createdAt) <= day && isRoutineDue(r, day)).length
+  }
+  return {
+    done: weekEvents.value.filter(e => e.type === 'done').length,
+    focus: weekSessions.value.reduce((n, s) => n + s.actualMin, 0),
+    habits: due ? Math.min(100, Math.round((weekLogs.value.length / due) * 100)) : null
+  }
+})
+async function clearDrop() {
+  const rows = byBox(4).map(x => toRaw(x))
+  if (!rows.length) return
+  await clearBox(4)
+  toast.add({
+    title: t('plan.cleared', { n: rows.length }),
+    duration: 6000,
+    actions: [{ label: t('common.undo'), color: 'neutral', variant: 'outline', onClick: () => { requireDb().tasks.bulkPut(rows) } }]
+  } as any)
+}
+
 async function add(task: Task) {
   if (!(await planFor(task.id, tomorrow.value))) toast.add({ title: t('task.top3Full', { top: topN.value }), color: 'warning' })
 }
@@ -48,6 +79,18 @@ async function add(task: Task) {
     </div>
 
     <div class="flex flex-col gap-3 px-[22px] pt-[18px]">
+      <section v-if="isWeekEnd" class="flex flex-col gap-3 rounded-[18px] bg-night p-4 text-paper" data-testid="week-review">
+        <span class="text-[15px] font-semibold">{{ t('review.weekTitle') }}</span>
+        <div class="grid gap-2" :class="week.habits === null ? 'grid-cols-2' : 'grid-cols-3'">
+          <div class="flex flex-col gap-0.5 rounded-[14px] bg-night2 p-3"><span class="display text-[22px] font-semibold">{{ week.done }}</span><span class="text-[12px] text-nighttext">{{ t('review.weekDone') }}</span></div>
+          <div class="flex flex-col gap-0.5 rounded-[14px] bg-night2 p-3"><span class="display text-[22px] font-semibold">{{ fmt.duration(week.focus) }}</span><span class="text-[12px] text-nighttext">{{ t('review.weekFocus') }}</span></div>
+          <div v-if="week.habits !== null" class="flex flex-col gap-0.5 rounded-[14px] bg-night2 p-3"><span class="display text-[22px] font-semibold">{{ week.habits }}%</span><span class="text-[12px] text-nighttext">{{ t('review.weekHabits') }}</span></div>
+        </div>
+        <div v-if="byBox(4).length" class="flex items-center gap-3 rounded-[14px] bg-night2 p-3">
+          <span class="grow text-[14px]">{{ t('review.weekDrop', { n: byBox(4).length }) }}</span>
+          <button type="button" class="flex h-10 shrink-0 items-center whitespace-nowrap rounded-[10px] bg-paper px-3.5 text-[13px] font-semibold text-night" data-testid="week-clear-drop" @click="clearDrop">{{ t('plan.clearAll') }}</button>
+        </div>
+      </section>
 
       <section class="card flex flex-col !rounded-[18px] p-4 pb-2" data-testid="review-top">
         <div class="mb-1 flex items-center gap-2.5">

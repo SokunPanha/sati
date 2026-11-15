@@ -108,7 +108,7 @@ const langs = [{ code: 'km' as const, label: 'ខ្មែរ' }, { code: 'en' a
 <template>
   <div class="landing min-h-dvh bg-cream text-ink" data-testid="page-download">
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-night text-cream" style="padding-top: env(safe-area-inset-top)">
+    <section class="relative overflow-hidden bg-night text-paper" style="padding-top: env(safe-area-inset-top)">
       <svg width="900" height="900" viewBox="0 0 900 900" class="pointer-events-none absolute -right-[260px] -top-[180px] md:-right-[120px]" aria-hidden="true">
         <circle cx="450" cy="450" r="440" fill="none" stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="2" />
         <circle cx="450" cy="450" r="340" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="2" />
@@ -129,14 +129,14 @@ const langs = [{ code: 'km' as const, label: 'ខ្មែរ' }, { code: 'en' a
               type="button"
               :aria-pressed="locale === l.code"
               class="h-9 min-w-[48px] rounded-full px-3 text-[13px]"
-              :class="locale === l.code ? 'bg-cream font-semibold text-night' : 'text-nighttext'"
+              :class="locale === l.code ? 'bg-paper font-semibold text-night' : 'text-nighttext'"
               :data-testid="`landing-lang-${l.code}`"
               @click="setLocale(l.code)"
             >
               {{ l.label }}
             </button>
           </div>
-          <a href="#how" class="hidden h-10 items-center rounded-full border border-nightline px-4 text-[14px] font-medium text-cream hover:bg-night2 sm:inline-flex" @click.prevent="showHow">
+          <a href="#how" class="hidden h-10 items-center rounded-full border border-nightline px-4 text-[14px] font-medium text-paper hover:bg-night2 sm:inline-flex" @click.prevent="showHow">
             {{ t('landing.nav') }}
           </a>
         </div>
@@ -170,7 +170,7 @@ const langs = [{ code: 'km' as const, label: 'ខ្មែរ' }, { code: 'en' a
             <NuxtLink
               v-if="!installed"
               :to="appLink"
-              class="inline-flex h-14 items-center justify-center rounded-2xl border border-nightline px-6 text-[15px] font-medium text-cream hover:bg-night2"
+              class="inline-flex h-14 items-center justify-center rounded-2xl border border-nightline px-6 text-[15px] font-medium text-paper hover:bg-night2"
               data-testid="landing-browser"
             >
               {{ t('landing.browser') }}
@@ -237,7 +237,7 @@ const langs = [{ code: 'km' as const, label: 'ខ្មែរ' }, { code: 'en' a
         </div>
 
         <div class="flex flex-col gap-4">
-          <div class="grid grid-cols-3 rounded-xl bg-white/70 p-[3px]" role="tablist" :aria-label="t('landing.howTitle')">
+          <div class="grid grid-cols-3 rounded-xl bg-card/70 p-[3px]" role="tablist" :aria-label="t('landing.howTitle')">
             <button
               v-for="p in platforms"
               :key="p.value"
@@ -245,7 +245,7 @@ const langs = [{ code: 'km' as const, label: 'ខ្មែរ' }, { code: 'en' a
               role="tab"
               :aria-selected="tab === p.value"
               class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-[9px] text-[14px]"
-              :class="tab === p.value ? 'bg-ink font-semibold text-white' : 'text-soft'"
+              :class="tab === p.value ? 'bg-sel font-semibold text-sel-tx' : 'text-soft'"
               :data-testid="`how-${p.value}`"
               @click="tab = p.value"
             >
@@ -277,7 +277,7 @@ const langs = [{ code: 'km' as const, label: 'ខ្មែរ' }, { code: 'en' a
     </section>
 
     <!-- Footer -->
-    <footer class="bg-night text-cream" style="padding-bottom: env(safe-area-inset-bottom)">
+    <footer class="bg-night text-paper" style="padding-bottom: env(safe-area-inset-bottom)">
       <div class="mx-auto flex max-w-6xl flex-col items-start gap-5 px-4 py-12 md:flex-row md:items-center md:justify-between md:px-8">
         <div class="flex items-center gap-3">
           <AppLogo :size="44" />

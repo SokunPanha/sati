@@ -44,6 +44,9 @@ function onSwMessage(e: MessageEvent) {
   if (e.data?.type === 'sati-navigate' && typeof e.data.url === 'string' && e.data.url.startsWith('/')) router.push(e.data.url)
 }
 
+// light / dark (Settings → App); in Auto it follows the phone, live
+useTheme()
+
 onMounted(async () => {
   window.addEventListener('pointerdown', notify.unlockAudio, { passive: true })
   navigator.serviceWorker?.addEventListener('message', onSwMessage)

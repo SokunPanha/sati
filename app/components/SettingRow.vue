@@ -10,12 +10,12 @@ const props = withDefaults(defineProps<{
   button?: boolean
 }>(), { tone: 'brand' })
 const TONES = {
-  brand: ['#E3F0EC', '#0F6E64'],
-  rem: ['#E6EEF8', '#2563A8'],
-  b1: ['#FBE9DF', '#C2510F'],
-  b3: ['#F6EDCF', '#8A6A00'],
-  violet: ['#ECE8F7', '#5B4BA8'],
-  ink: ['#ECEAE4', '#1A1A17']
+  brand: ['var(--color-brand-tint)', 'var(--color-brand)'],
+  rem: ['var(--color-rem-bg)', 'var(--color-rem)'],
+  b1: ['var(--color-b1-bg)', 'var(--color-b1)'],
+  b3: ['var(--color-b3-bg)', 'var(--color-b3-tx)'],
+  violet: ['var(--color-violet-bg)', 'var(--color-violet)'],
+  ink: ['var(--color-b4-bg)', 'var(--color-ink)']
 } as const
 const tile = computed(() => ({ background: TONES[props.tone][0], color: TONES[props.tone][1] }))
 </script>

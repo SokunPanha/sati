@@ -20,7 +20,7 @@ withDefaults(defineProps<{
       :data-testid="testid ? `${testid}-${o.value}` : undefined"
       class="flex min-h-[40px] items-center justify-center gap-1.5 rounded-[9px] px-1 text-[13px] leading-tight transition-colors"
       :class="model === o.value
-        ? (tone === 'dark' ? 'bg-ink font-semibold text-white' : 'bg-white font-semibold text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)]')
+        ? (tone === 'dark' ? 'bg-sel font-semibold text-sel-tx' : 'bg-card font-semibold text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)]')
         : 'text-soft'"
       @click="model = o.value"
     >

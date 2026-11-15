@@ -25,7 +25,7 @@ function pickDate() {
 }
 
 const chip = 'flex h-11 items-center whitespace-nowrap rounded-full px-3.5 text-[13px]'
-const chipOff = 'border border-edge bg-white text-ink'
+const chipOff = 'border border-edge bg-card text-ink'
 const chipOn = 'bg-rem font-semibold text-white'
 </script>
 
@@ -46,11 +46,11 @@ const chipOn = 'bg-rem font-semibold text-white'
       </label>
     </div>
     <div class="grid grid-cols-2 gap-2">
-      <label class="flex h-[56px] flex-col justify-center rounded-xl border border-edge bg-white px-3.5">
+      <label class="flex h-[56px] flex-col justify-center rounded-xl border border-edge bg-card px-3.5">
         <span class="truncate text-[11px] leading-tight text-soft">{{ t('reminder.time') }}</span>
         <input v-model="time" type="time" required class="-my-2 w-full border-none bg-transparent p-0 text-[16px] font-semibold text-ink outline-none" data-testid="reminder-time">
       </label>
-      <label class="relative flex h-[56px] flex-col justify-center rounded-xl border border-edge bg-white pr-9 pl-3.5 focus-within:border-brand">
+      <label class="relative flex h-[56px] flex-col justify-center rounded-xl border border-edge bg-card pr-9 pl-3.5 focus-within:border-brand">
         <span class="truncate text-[11px] leading-tight text-soft">{{ t('reminder.alertMe') }}</span>
         <UIcon name="i-lucide-chevron-down" class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-soft" />
         <select v-model.number="alertBefore" class="-my-2 min-h-[44px] w-full cursor-pointer appearance-none truncate border-none bg-transparent p-0 text-[15px] font-semibold text-ink outline-none" data-testid="reminder-alert">

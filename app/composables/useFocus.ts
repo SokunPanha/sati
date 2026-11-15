@@ -173,6 +173,18 @@ export const useFocus = shared(() => {
     await persist()
   }
 
+  /** Add minutes to the running (or paused) focus session. */
+  async function extend(min = 5) {
+    const f = focus.value
+    if (!f || f.phase !== 'focus') return
+    if (f.pausedMs !== null) f.pausedMs += min * 60000
+    else if (f.endAt !== null) f.endAt += min * 60000
+    else return
+    f.plannedMin += min
+    compute()
+    await persist()
+  }
+
   async function completeFocus() {
     const f = focus.value
     if (!f) return
@@ -285,5 +297,5 @@ export const useFocus = shared(() => {
 
   watch(activeDb, () => { load() })
 
-  return { focus, remainingMs, totalMs, running, paused, load, setTexts, start, startBatch, pause, resume, endEarly, startBreak, again, finish }
+  return { focus, remainingMs, totalMs, running, paused, load, setTexts, start, startBatch, pause, resume, extend, endEarly, startBreak, again, finish }
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Box, Repeat } from '~/types'
+import type { Box, ChecklistItem, Repeat } from '~/types'
 
 // The task form. Create (CaptureSheet) and Edit (SortSheet) both use it, so the two always look and work the same:
 // title, description, box, then one row of switches (Focus time, Add to Top, Remind me) and Repeat (habit) last.
@@ -7,6 +7,7 @@ const props = withDefaults(defineProps<{ testid?: string, autofocus?: boolean }>
 const emit = defineEmits<{ submit: [] }>()
 const title = defineModel<string>('title', { required: true })
 const description = defineModel<string>('description', { required: true })
+const checklist = defineModel<ChecklistItem[]>('checklist', { default: () => [] })
 /** null = no box picked yet: the form can't be saved until one is */
 const box = defineModel<Box | null>('box', { required: true })
 const repeatType = defineModel<Repeat['type']>('repeatType', { required: true })
@@ -37,6 +38,14 @@ function openNote() {
   noteOpen.value = true
   nextTick(() => noteEl.value?.textareaRef?.focus())
 }
+/** Steps (checklist) also stay hidden behind "+ Steps" until wanted. */
+const stepsOpen = ref(false)
+const showSteps = computed(() => stepsOpen.value || checklist.value.length > 0)
+const stepsEl = ref<{ focus: () => void } | null>(null)
+function openSteps() {
+  stepsOpen.value = true
+  nextTick(() => stepsEl.value?.focus())
+}
 
 /** Ticking "Add to Top" with no box chosen selects Do now, so the tiles show where it goes. */
 function toggleTop() {
@@ -63,15 +72,20 @@ const chips = computed(() => [
     variant="none"
     :placeholder="t('capture.placeholder')"
     :aria-label="t('capture.placeholder')"
-    :ui="{ root: 'w-full', base: 'min-h-20 resize-none rounded-[14px] border-2 border-brand bg-white p-3.5 text-[16px] text-ink placeholder:text-faint' }"
+    :ui="{ root: 'w-full', base: 'min-h-20 resize-none rounded-[14px] border-2 border-brand bg-card p-3.5 text-[16px] text-ink placeholder:text-faint' }"
     :data-testid="testid === 'capture' ? 'capture-text' : id('title')"
     @keydown.enter.exact.prevent="emit('submit')"
   />
-  <button v-if="!showNote" type="button" class="-mt-1.5 flex min-h-[36px] items-center gap-1 self-start px-1 text-[14px] font-medium text-brand" :data-testid="id('add-note')" @click="openNote">
-    <UIcon name="i-lucide-plus" class="size-4" />{{ t('task.addNote') }}
-  </button>
+  <div v-if="!showNote || !showSteps" class="-mt-1.5 flex items-center gap-4">
+    <button v-if="!showNote" type="button" class="flex min-h-[36px] items-center gap-1 px-1 text-[14px] font-medium text-brand" :data-testid="id('add-note')" @click="openNote">
+      <UIcon name="i-lucide-plus" class="size-4" />{{ t('task.addNote') }}
+    </button>
+    <button v-if="!showSteps" type="button" class="flex min-h-[36px] items-center gap-1 px-1 text-[14px] font-medium text-brand" :data-testid="id('add-steps')" @click="openSteps">
+      <UIcon name="i-lucide-plus" class="size-4" />{{ t('steps.title') }}
+    </button>
+  </div>
   <UTextarea
-    v-else
+    v-if="showNote"
     ref="noteEl"
     v-model="description"
     :rows="2"
@@ -80,9 +94,11 @@ const chips = computed(() => [
     variant="none"
     :placeholder="t('task.descriptionPlaceholder')"
     :aria-label="t('task.description')"
-    :ui="{ root: '-mt-1.5 w-full', base: 'resize-none rounded-[14px] border border-edge bg-white px-3.5 py-2.5 text-[15px] text-ink placeholder:text-faint focus:border-brand' }"
+    :ui="{ root: '-mt-1.5 w-full', base: 'resize-none rounded-[14px] border border-edge bg-card px-3.5 py-2.5 text-[15px] text-ink placeholder:text-faint focus:border-brand' }"
     :data-testid="id('description')"
   />
+
+  <ChecklistEditor v-if="showSteps" ref="stepsEl" v-model="checklist" editable :testid="id('steps')" />
 
   <div class="flex flex-col gap-2">
     <span class="text-[13px] font-semibold">{{ t('capture.sortNow') }}</span>
@@ -97,7 +113,7 @@ const chips = computed(() => [
       role="switch"
       :aria-checked="c.on"
       :aria-label="c.aria"
-      class="flex h-[68px] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border bg-white px-1"
+      class="flex h-[68px] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border bg-card px-1"
       :class="c.on ? `border-2 ${c.border}` : 'border-edge'"
       :data-testid="id(c.key)"
       @click="c.toggle()"

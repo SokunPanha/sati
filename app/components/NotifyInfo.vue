@@ -22,7 +22,7 @@ const status = computed(() => {
     <p class="m-0">{{ t('notifyInfo.p2') }}</p>
     <p class="m-0">{{ t('notifyInfo.p3') }}</p>
     <p class="m-0">{{ t('notifyInfo.p4') }}</p>
-    <div class="mt-1 flex flex-col gap-1.5 rounded-xl bg-white/70 p-3 font-medium">
+    <div class="mt-1 flex flex-col gap-1.5 rounded-xl bg-card/70 p-3 font-medium">
       <span class="flex items-center gap-2" data-testid="perm-status"><UIcon :name="status.icon" class="size-4 shrink-0" />{{ status.text }}</span>
       <span class="flex items-center gap-2"><UIcon :name="isStandalone ? 'i-lucide-circle-check' : 'i-lucide-download'" class="size-4 shrink-0" />{{ isStandalone ? t('notifyInfo.installed') : t('notifyInfo.notInstalled') }}</span>
     </div>

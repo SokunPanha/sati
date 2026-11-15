@@ -5,7 +5,7 @@ import type { Profile } from '~/types'
 const { t, locale } = useI18n()
 const toast = useToast()
 const { sheets } = useSheets()
-const { profiles, active, activate, create, verifyPin } = useProfile()
+const { profiles, active, activate, create, verifyPin, remove } = useProfile()
 
 const summaries = ref<Record<string, { routines: number, streak: number }>>({})
 async function loadSummaries() {
@@ -62,6 +62,16 @@ const pinOpen = ref(false)
 const pinTarget = ref<Profile | null>(null)
 const pinValue = ref('')
 const pinError = ref(false)
+/** wrong tries in a row; after 5 the only way out is to delete that profile (its data never leaves the device) */
+const pinTries = ref(0)
+const forgotOpen = ref(false)
+async function deleteLocked() {
+  const p = pinTarget.value
+  if (!p) return
+  pinOpen.value = false
+  await remove(p.id)
+  toast.add({ title: t('settings.deleted') })
+}
 
 async function doSwitch(p: Profile) {
   await activate(p.id)
@@ -78,6 +88,7 @@ function pick(p: Profile) {
     pinTarget.value = p
     pinValue.value = ''
     pinError.value = false
+    pinTries.value = 0
     pinOpen.value = true
   }
   else doSwitch(p)
@@ -91,6 +102,7 @@ async function unlock() {
   else {
     pinError.value = true
     pinValue.value = ''
+    pinTries.value++
   }
 }
 function openSettings() {
@@ -128,7 +140,7 @@ function openSettings() {
       <UIcon name="i-lucide-plus" class="size-[18px]" />{{ t('profiles.newProfile') }}
     </button>
 
-    <form v-else class="flex flex-col gap-3 rounded-[18px] border-2 border-brand bg-white px-4 py-3.5" @submit.prevent="createProfile">
+    <form v-else class="flex flex-col gap-3 rounded-[18px] border-2 border-brand bg-card px-4 py-3.5" @submit.prevent="createProfile">
       <span class="text-[14px] font-semibold">{{ t('profiles.newProfile') }}</span>
       <div class="flex items-center gap-3">
         <button type="button" :aria-label="t('profiles.uploadPhoto')" class="relative flex size-14 shrink-0 flex-col items-center justify-center overflow-hidden rounded-full text-soft" :class="form.photo ? '' : 'border-2 border-dashed border-faint bg-cream'" @click="fileInput?.click()">
@@ -173,8 +185,10 @@ function openSettings() {
           <input v-model="pinValue" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autofocus class="field h-[52px] text-center text-[22px] tracking-[0.5em]" :aria-label="t('profiles.pinPlaceholder')" data-testid="pin-input">
           <span v-if="pinError" class="text-[13px] text-b1-tx" role="alert">{{ t('profiles.wrongPin') }}</span>
           <UButton type="submit" block size="xl" class="h-[50px] rounded-[14px] font-semibold" :label="t('profiles.unlock')" />
+          <button v-if="pinTries >= 5" type="button" class="min-h-[44px] text-[14px] font-semibold text-b1-tx" data-testid="pin-forgot" @click="forgotOpen = true">{{ t('profiles.forgotPin') }}</button>
         </form>
       </template>
     </UModal>
+    <ConfirmModal v-model:open="forgotOpen" :title="t('profiles.forgotTitle', { name: pinTarget?.name || '' })" :body="t('profiles.forgotBody')" :confirm-label="t('settings.deleteProfile')" danger @confirm="deleteLocked" />
   </BottomSheet>
 </template>

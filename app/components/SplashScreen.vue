@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <div class="fixed inset-0 z-[9998] flex flex-col items-center overflow-hidden bg-night px-8 text-cream" style="padding-bottom: calc(56px + env(safe-area-inset-bottom))" role="status" aria-label="Sati">
+  <div class="fixed inset-0 z-[9998] flex flex-col items-center overflow-hidden bg-night px-8 text-paper" style="padding-bottom: calc(56px + env(safe-area-inset-bottom))" role="status" aria-label="Sati">
     <svg width="560" height="560" viewBox="0 0 560 560" class="absolute left-1/2" style="top: 34.5%; transform: translate(-50%, -35.5%)" aria-hidden="true">
       <circle cx="280" cy="280" r="270" fill="none" stroke="#FFFFFF" stroke-opacity="0.05" stroke-width="2" />
       <circle cx="280" cy="280" r="200" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="2" />

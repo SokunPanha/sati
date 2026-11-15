@@ -1,10 +1,11 @@
-import type { Box, Repeat, Task } from '~/types'
+import type { Box, ChecklistItem, Repeat, Task } from '~/types'
 import { boxFlags } from '~/utils/boxes'
 
 /** Values of the shared task form (TaskFields), used by both Create and Edit. */
 export interface TaskFormState {
   title: string
   description: string
+  checklist: ChecklistItem[]
   box: Box | null
   repeatType: Repeat['type']
   days: number[]
@@ -32,7 +33,7 @@ export function useTaskForm() {
   const { reminders, save: saveReminder, remove: removeReminder } = useReminders()
 
   const form = reactive<TaskFormState>({
-    title: '', description: '', box: null, repeatType: 'none', days: [], sessionMin: 0,
+    title: '', description: '', checklist: [], box: null, repeatType: 'none', days: [], sessionMin: 0,
     addTop: false, remind: false, remDate: runtime.today, remTime: '09:00', remAlert: 0
   })
   const isHabit = computed(() => form.repeatType !== 'none')
@@ -47,7 +48,7 @@ export function useTaskForm() {
   function reset(remind = false) {
     const n = nextHour()
     Object.assign(form, {
-      title: '', description: '', box: null, repeatType: 'none', days: [], sessionMin: 0,
+      title: '', description: '', checklist: [], box: null, repeatType: 'none', days: [], sessionMin: 0,
       addTop: false, remind, remDate: n.day, remTime: n.time, remAlert: 0
     })
   }
@@ -59,6 +60,7 @@ export function useTaskForm() {
     Object.assign(form, {
       title: task.title,
       description: task.description || '',
+      checklist: (task.checklist || []).map(x => ({ ...x })),
       box: task.status === 'inbox' ? null : task.box,
       repeatType: task.repeat.type,
       days: [...task.repeat.days],
@@ -104,6 +106,8 @@ export function useTaskForm() {
       sessionMin: form.sessionMin,
       sessionsPlanned: 1
     })
+    // steps: drop empty ones; store plain objects
+    await requireDb().tasks.update(task.id, { checklist: form.checklist.filter(x => x.text.trim()).map(x => ({ id: x.id, text: x.text.trim(), done: x.done })) })
 
     // Reminder: create / update / remove the one that belongs to this task
     const cur = reminderOf(task.id)

@@ -80,7 +80,7 @@ async function del() {
       size="xl"
       variant="none"
       autofocus
-      :ui="{ root: 'w-full', base: 'display h-[54px] rounded-[14px] border-2 border-rem bg-white px-3.5 text-[19px] font-semibold text-ink placeholder:font-medium placeholder:text-faint' }"
+      :ui="{ root: 'w-full', base: 'display h-[54px] rounded-[14px] border-2 border-rem bg-card px-3.5 text-[19px] font-semibold text-ink placeholder:font-medium placeholder:text-faint' }"
       data-testid="reminder-title"
     />
 

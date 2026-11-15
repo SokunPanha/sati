@@ -33,6 +33,7 @@ async function save() {
         <TaskFields
           v-model:title="form.title"
           v-model:description="form.description"
+          v-model:checklist="form.checklist"
           v-model:box="form.box"
           v-model:repeat-type="form.repeatType"
           v-model:days="form.days"

@@ -32,7 +32,7 @@ const options = computed(() => {
         :aria-pressed="minutes === n"
         :aria-label="n ? t('common.min', { n }) : t('focusTime.none')"
         class="h-11 whitespace-nowrap rounded-[10px] text-[13px]"
-        :class="minutes === n ? 'bg-ink font-semibold text-white' : 'border border-edge bg-white text-ink'"
+        :class="minutes === n ? 'bg-sel font-semibold text-sel-tx' : 'border border-edge bg-card text-ink'"
         :data-testid="testid ? `${testid}-focus-${n}` : undefined"
         @click="minutes = n"
       >

@@ -8,6 +8,14 @@
   --font-display: 'Space Grotesk', 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer Sangam MN', 'Khmer OS', system-ui, sans-serif;
 
   --color-cream: #F5F4EF;
+  /* light text and buttons on the dark (night) areas: the same in light and dark mode */
+  --color-paper: #F5F4EF;
+  /* cards, fields, sheets on the cream page */
+  --color-card: #FFFFFF;
+  /* selected pill / chip (dark in light mode, light in dark mode) */
+  --color-sel: #1A1A17;
+  --color-sel-tx: #FFFFFF;
+  --color-page: #E9E7E0;
   --color-ink: #1A1A17;
   --color-soft: #5C5B55;
   --color-faint: #9C998F;
@@ -45,25 +53,84 @@
   --color-rem: #2563A8;
   --color-rem-bg: #E6EEF8;
   --color-rem-tx: #1D4F86;
+  --color-violet: #5B4BA8;
+  --color-violet-bg: #ECE8F7;
+  --color-b2-soft: #C4DED6;
+  --color-b1-soft: #F3CDB8;
+  --color-b3-soft: #E9DBA6;
+  --color-b4-soft: #D8D5CC;
+}
+
+/* Dark mode: the same names, darker values (html.dark is set from Settings → App, or by the phone in Auto). */
+html.dark {
+  color-scheme: dark;
+  --color-cream: #121816;
+  --color-card: #1B2321;
+  --color-sel: #ECEAE4;
+  --color-sel-tx: #121816;
+  --color-page: #0B100F;
+  --color-ink: #ECEAE4;
+  --color-soft: #A7ACA5;
+  --color-faint: #6E746F;
+  --color-rule: #2B3431;
+  --color-rule2: #232B29;
+  --color-edge: #38423E;
+  --color-ringc: #4A5450;
+  --color-seg: #232B28;
+  --color-switchoff: #3A4440;
+  --color-brand: #1F8C7D;
+  --color-brand-dark: #9FE0D3;
+  --color-brand-tint: #17312D;
+  --color-brand-soft: #25463F;
+  --color-brand-pale: #1F3E38;
+  --color-b1: #E07B3C;
+  --color-b1-bg: #3A2217;
+  --color-b1-tx: #F4B791;
+  --color-b1-line: #5C3524;
+  --color-b1-soft: #5C3524;
+  --color-b2-soft: #25463F;
+  --color-b3: #D4AA2C;
+  --color-b3-bg: #332A10;
+  --color-b3-tx: #EACD6E;
+  --color-b3-soft: #4E4219;
+  --color-b4: #9C9A93;
+  --color-b4-bg: #2A2E2C;
+  --color-b4-tx: #CFCCC4;
+  --color-b4-soft: #3B403D;
+  --color-rem: #4F8DDA;
+  --color-rem-bg: #172739;
+  --color-rem-tx: #A2C6F2;
+  --color-violet: #A99BEA;
+  --color-violet-bg: #2A2540;
 }
 
 html {
-  background: #E9E7E0;
+  background: var(--color-page);
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  --ui-primary: #0F6E64;
-  --ui-bg: #F5F4EF;
-  --ui-text: #1A1A17;
-  --ui-text-highlighted: #1A1A17;
-  --ui-text-muted: #5C5B55;
-  --ui-border: #E4E2DA;
+  --ui-primary: var(--color-brand);
+  --ui-bg: var(--color-cream);
+  --ui-bg-elevated: var(--color-card);
+  --ui-text: var(--color-ink);
+  --ui-text-highlighted: var(--color-ink);
+  --ui-text-muted: var(--color-soft);
+  --ui-text-dimmed: var(--color-faint);
+  --ui-text-toned: var(--color-soft);
+  --ui-text-inverted: #FFFFFF;
+  --ui-bg-muted: var(--color-seg);
+  --ui-bg-accented: var(--color-rule);
+  --ui-bg-inverted: var(--color-sel);
+  --ui-border: var(--color-rule);
+  --ui-border-muted: var(--color-rule2);
+  --ui-border-accented: var(--color-edge);
+  --ui-border-inverted: var(--color-sel);
   --ui-radius: 0.75rem;
   margin: 0;
-  background: #E9E7E0;
-  color: #1A1A17;
+  background: var(--color-page);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   line-height: 1.45;
   overscroll-behavior-y: none;
@@ -102,7 +169,7 @@ button, a, input, select, textarea { font-family: inherit; }
 button { cursor: pointer; }
 input[type='date'], input[type='time'] { min-height: 44px; }
 
-.card { background: #fff; border: 1px solid var(--color-rule); border-radius: 16px; }
+.card { background: var(--color-card); border: 1px solid var(--color-rule); border-radius: 16px; }
 .section-label { margin: 0 0 0 4px; font-size: 12px; font-weight: 600; color: var(--color-soft); }
 .tap { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 
@@ -110,7 +177,7 @@ input[type='date'], input[type='time'] { min-height: 44px; }
   width: 100%;
   border-radius: 14px;
   border: 1px solid var(--color-edge);
-  background: #fff;
+  background: var(--color-card);
   padding: 0 14px;
   color: var(--color-ink);
   font-size: 16px;

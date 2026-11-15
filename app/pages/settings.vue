@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BackupFile, NotifSettings } from '~/types'
+import type { ThemeChoice } from '~/composables/useTheme'
 
 const { t } = useI18n()
 const topN = useTopN()
@@ -91,6 +92,8 @@ const builtAt = Date.parse(String(rc.public.buildTime || '')) || 0
 /** "1ac258d · 15 Nov 12:52": the commit first, so it's still readable if a narrow screen cuts the end */
 const version = computed(() => [rc.public.buildSha, builtAt ? `${fmt.date(ymd(builtAt), { day: 'numeric', month: 'short' })} ${fmt.time(builtAt)}` : ''].filter(Boolean).join(' · '))
 const checking = ref(false)
+const theme = useTheme()
+const themeOptions = computed(() => (['light', 'dark', 'auto'] as const).map(v => ({ value: v, label: t(`settings.theme.${v}`) })))
 
 /** Ask the server for its newest build (past the offline cache). Same build: say so. Newer: install it and reload. */
 async function checkUpdate() {
@@ -180,7 +183,7 @@ const langOptions = [{ value: 'km' as const, label: 'ខ្មែរ' }, { value
     <h1 class="display m-0 px-1 text-[30px] font-bold">{{ t('settings.title') }}</h1>
 
     <!-- Profile hero -->
-    <section class="relative -mt-2 overflow-hidden rounded-[26px] bg-night p-5 text-cream">
+    <section class="relative -mt-2 overflow-hidden rounded-[26px] bg-night p-5 text-paper">
       <svg width="320" height="320" viewBox="0 0 320 320" class="pointer-events-none absolute -top-24 -right-24" aria-hidden="true">
         <circle cx="160" cy="160" r="150" fill="none" stroke="#FFFFFF" stroke-opacity="0.05" stroke-width="2" />
         <circle cx="160" cy="160" r="105" fill="none" stroke="#FFFFFF" stroke-opacity="0.07" stroke-width="2" />
@@ -193,15 +196,15 @@ const langOptions = [{ value: 'km' as const, label: 'ខ្មែរ' }, { value
         </button>
         <input ref="photoInput" type="file" accept="image/*" class="hidden" @change="onPhoto">
         <div class="flex min-w-0 grow flex-col">
-          <UInput v-model="nameDraft" variant="none" maxlength="40" :aria-label="t('settings.nameLabel')" :ui="{ root: 'w-full', base: 'display h-10 rounded-lg px-0 text-[22px] font-semibold text-cream focus:bg-night2 focus:px-2' }" data-testid="settings-name" @blur="saveName" @keydown.enter="($event.target as HTMLInputElement).blur()" />
+          <UInput v-model="nameDraft" variant="none" maxlength="40" :aria-label="t('settings.nameLabel')" :ui="{ root: 'w-full', base: 'display h-10 rounded-lg px-0 text-[22px] font-semibold text-paper focus:bg-night2 focus:px-2' }" data-testid="settings-name" @blur="saveName" @keydown.enter="($event.target as HTMLInputElement).blur()" />
           <span v-if="!profile.photo" class="truncate text-[13px] text-nighttext">{{ t('settings.tapPhoto') }}</span>
-          <button v-else type="button" class="flex min-h-[28px] items-center gap-1.5 self-start text-[13px] text-nighttext hover:text-cream" @click="update(profile.id, { photo: null })">
+          <button v-else type="button" class="flex min-h-[28px] items-center gap-1.5 self-start text-[13px] text-nighttext hover:text-paper" @click="update(profile.id, { photo: null })">
             <UIcon name="i-lucide-image-off" class="size-3.5 shrink-0" /><span class="truncate">{{ t('settings.removePhoto') }}</span>
           </button>
         </div>
         <button
           type="button"
-          class="flex size-11 shrink-0 items-center justify-center self-start rounded-full bg-night2 text-cream ring-1 ring-nightline hover:bg-nightline"
+          class="flex size-11 shrink-0 items-center justify-center self-start rounded-full bg-night2 text-paper ring-1 ring-nightline hover:bg-nightline"
           :aria-label="t('settings.switch')"
           :title="t('settings.switch')"
           data-testid="settings-switch"
@@ -235,7 +238,7 @@ const langOptions = [{ value: 'km' as const, label: 'ខ្មែរ' }, { value
       <div class="card flex flex-col overflow-hidden !rounded-[20px]">
         <div
           class="m-2 flex items-center gap-3 rounded-2xl px-3.5 py-3"
-          :class="perm === 'granted' ? 'bg-brand-tint text-brand-dark' : perm === 'default' ? 'bg-night text-cream' : 'bg-b1-bg text-b1-tx'"
+          :class="perm === 'granted' ? 'bg-brand-tint text-brand-dark' : perm === 'default' ? 'bg-night text-paper' : 'bg-b1-bg text-b1-tx'"
         >
           <UIcon :name="perm === 'granted' ? 'i-lucide-bell-ring' : perm === 'default' ? 'i-lucide-bell' : 'i-lucide-bell-off'" class="size-5 shrink-0" />
           <span class="flex min-w-0 grow flex-col">
@@ -253,7 +256,7 @@ const langOptions = [{ value: 'km' as const, label: 'ខ្មែរ' }, { value
         </SettingRow>
 
         <div class="p-3">
-          <button type="button" class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand-soft bg-white text-[14px] font-semibold text-brand" data-testid="test-notification" @click="test">
+          <button type="button" class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand-soft bg-card text-[14px] font-semibold text-brand" data-testid="test-notification" @click="test">
             <UIcon name="i-lucide-send" class="size-4 shrink-0" /><span class="truncate">{{ t('settings.test') }}</span>
           </button>
         </div>
@@ -303,6 +306,11 @@ const langOptions = [{ value: 'km' as const, label: 'ខ្មែរ' }, { value
     <section class="flex flex-col gap-2">
       <h2 class="section-label caps">{{ t('settings.app') }}</h2>
       <div class="card flex flex-col overflow-hidden !rounded-[20px]">
+        <SettingRow icon="i-lucide-moon" tone="violet" :label="t('settings.theme.label')">
+          <template #below>
+            <SegmentedControl :model-value="theme.choice.value" :options="themeOptions" :label="t('settings.theme.label')" testid="set-theme" @update:model-value="theme.set($event as ThemeChoice)" />
+          </template>
+        </SettingRow>
         <SettingRow :icon="checking ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'" tone="ink" :label="t('settings.checkUpdate')" :sub="checking ? t('settings.checking') : version" button data-testid="check-update" @click="checkUpdate()" />
       </div>
     </section>

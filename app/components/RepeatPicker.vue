@@ -34,7 +34,7 @@ function toggleDay(d: number) {
         type="button"
         :aria-pressed="days.includes(d.value)"
         class="h-11 rounded-[10px] text-[12px]"
-        :class="days.includes(d.value) ? 'bg-brand font-semibold text-white' : 'border border-edge bg-white text-ink'"
+        :class="days.includes(d.value) ? 'bg-brand font-semibold text-white' : 'border border-edge bg-card text-ink'"
         @click="toggleDay(d.value)"
       >
         {{ d.label }}

@@ -17,7 +17,7 @@ const right = computed(() => [
 </script>
 
 <template>
-  <nav class="fixed-col bottom-0 z-30 grid grid-cols-7 border-t border-rule bg-white" style="height: calc(64px + max(12px, env(safe-area-inset-bottom))); padding-bottom: max(12px, env(safe-area-inset-bottom))">
+  <nav class="fixed-col bottom-0 z-30 grid grid-cols-7 border-t border-rule bg-card" style="height: calc(64px + max(12px, env(safe-area-inset-bottom))); padding-bottom: max(12px, env(safe-area-inset-bottom))">
     <template v-for="(group, gi) in [left, right]" :key="gi">
       <NuxtLink
         v-for="tab in group"
@@ -36,7 +36,7 @@ const right = computed(() => [
       <div v-if="gi === 0" class="flex items-start justify-center">
         <button
           type="button"
-          class="-mt-5 flex size-[56px] items-center justify-center rounded-full bg-brand text-white shadow-[0_6px_18px_rgba(15,110,100,0.35)] ring-4 ring-white active:scale-95"
+          class="-mt-5 flex size-[56px] items-center justify-center rounded-full bg-brand text-white shadow-[0_6px_18px_rgba(15,110,100,0.35)] ring-4 ring-card active:scale-95"
           :aria-label="t('tabs.add')"
           data-testid="capture-bar"
           @click="openCapture('task')"

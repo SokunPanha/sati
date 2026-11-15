@@ -5,7 +5,7 @@ const { t } = useI18n()
 const topN = useTopN()
 const fmt = useFmt()
 const { openSort, openTask } = useSheets()
-const { inbox, routines, byBox, clearBox, addToTop3, removeFromTop3 } = useTasks()
+const { inbox, active, routines, byBox, clearBox, addToTop3, removeFromTop3 } = useTasks()
 const toast = useToast()
 
 // Every task, grouped by box. Collapsed sections are remembered on this device.
@@ -45,7 +45,10 @@ async function clearDrop() {
 }
 
 function sub(task: Task) {
-  return task.sessionMin ? t('common.min', { n: task.sessionMin }) : ''
+  const parts: string[] = []
+  if (task.sessionMin) parts.push(t('common.min', { n: task.sessionMin }))
+  if (task.checklist?.length) parts.push(`✓ ${task.checklist.filter(c => c.done).length}/${task.checklist.length}`)
+  return parts.join(' · ')
 }
 /** One tap on the star: add to / remove from today's Top list. */
 async function toggleTop(task: Task) {
@@ -53,6 +56,25 @@ async function toggleTop(task: Task) {
   else if (!(await addToTop3(task.id))) toast.add({ title: t('task.top3Full', { top: topN.value }), color: 'warning' })
 }
 const cells: Box[] = [1, 2, 3, 4]
+
+// Search every open task and habit by title, note or checklist item.
+const searching = ref(false)
+const query = ref('')
+const searchEl = ref<HTMLInputElement | null>(null)
+function openSearch() {
+  searching.value = true
+  nextTick(() => searchEl.value?.focus())
+}
+function closeSearch() {
+  searching.value = false
+  query.value = ''
+}
+const results = computed(() => {
+  const q = query.value.trim().toLocaleLowerCase()
+  if (!q) return []
+  const hit = (x: Task) => [x.title, x.description || '', ...(x.checklist || []).map(c => c.text)].some(s => s.toLocaleLowerCase().includes(q))
+  return [...active.value, ...routines.value, ...inbox.value].filter(hit)
+})
 </script>
 
 <template>
@@ -62,10 +84,33 @@ const cells: Box[] = [1, 2, 3, 4]
         <span class="truncate text-[13px] font-medium text-soft">{{ t('plan.subtitle') }}</span>
         <h1 class="display m-0 text-[34px] font-bold">{{ t('plan.title') }}</h1>
       </div>
+      <button v-if="!searching" type="button" class="tap -mr-2 mb-1 shrink-0 text-ink" :aria-label="t('plan.search')" data-testid="plan-search" @click="openSearch">
+        <UIcon name="i-lucide-search" class="size-[22px]" />
+      </button>
+    </div>
+
+    <div v-if="searching" class="mx-[22px] mt-4 flex items-center gap-2">
+      <div class="flex h-12 min-w-0 grow items-center gap-2 rounded-[14px] border-2 border-brand bg-card px-3">
+        <UIcon name="i-lucide-search" class="size-5 shrink-0 text-soft" />
+        <input ref="searchEl" v-model="query" type="search" enterkeyhint="search" class="min-w-0 grow bg-transparent text-[16px] text-ink outline-none placeholder:text-faint" :placeholder="t('plan.searchPlaceholder')" :aria-label="t('plan.search')" data-testid="plan-search-input" @keydown.esc="closeSearch">
+      </div>
+      <button type="button" class="tap shrink-0 whitespace-nowrap px-1 text-[14px] font-semibold text-brand" data-testid="plan-search-close" @click="closeSearch">{{ t('common.cancel') }}</button>
+    </div>
+    <div v-if="searching && query.trim()" class="mx-[22px] mt-3 flex flex-col gap-2" data-testid="search-results">
+      <div v-if="results.length" class="card flex flex-col overflow-hidden">
+        <button v-for="task in results" :key="task.id" type="button" class="flex min-h-[52px] items-center gap-3 border-b border-rule2 px-4 py-2.5 text-left last:border-b-0" data-testid="search-row" @click="task.status === 'inbox' ? openSort(task.id) : openTask(task.id)">
+          <span class="flex min-w-0 grow flex-col">
+            <span class="truncate text-[14px] font-medium text-ink">{{ task.title }}</span>
+            <span v-if="task.isRoutine" class="text-[12px] text-soft">{{ fmt.repeatLabel(task.repeat) }}</span>
+          </span>
+          <BoxBadge v-if="task.status !== 'inbox'" :box="task.box" />
+        </button>
+      </div>
+      <p v-else class="m-0 px-1 text-[14px] text-soft" data-testid="search-empty">{{ t('plan.noResults') }}</p>
     </div>
 
 
-    <div class="mx-[22px] mt-4 flex flex-col gap-4" data-testid="plan-list">
+    <div v-show="!(searching && query.trim())" class="mx-[22px] mt-4 flex flex-col gap-4" data-testid="plan-list">
       <!-- Tasks saved before a box was required: open one and pick its box -->
       <section v-if="inbox.length" class="flex flex-col gap-2" data-testid="no-box">
         <h2 class="m-0 flex min-h-[40px] items-center gap-2 text-[13px] font-semibold text-soft">{{ t('plan.noBox') }}<span class="font-medium">{{ inbox.length }}</span></h2>

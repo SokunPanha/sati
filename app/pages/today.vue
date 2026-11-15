@@ -40,6 +40,7 @@ const ringOffset = computed(() => RING * (1 - (top3.value.length ? doneCount.val
 function meta(task: Task) {
   const parts: string[] = []
   if (task.status !== 'done' && task.sessionMin) parts.push(t('common.min', { n: task.sessionMin }))
+  if (task.checklist?.length) parts.push(`✓ ${task.checklist.filter(c => c.done).length}/${task.checklist.length}`)
   if (task.carriedFrom) parts.push(t('today.carried'))
   return parts.join(' · ')
 }
@@ -86,7 +87,7 @@ async function startFocus(task: Task) {
 <template>
   <div class="today" data-testid="page-today" style="padding-bottom: calc(120px + env(safe-area-inset-bottom))">
     <!-- Header -->
-    <section class="relative overflow-hidden bg-night px-[22px] pt-3 pb-12 text-cream">
+    <section class="relative overflow-hidden bg-night px-[22px] pt-3 pb-12 text-paper">
       <svg width="420" height="420" viewBox="0 0 420 420" class="pointer-events-none absolute -top-[150px] -right-[150px]" aria-hidden="true">
         <circle cx="210" cy="210" r="200" fill="none" stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="2" />
         <circle cx="210" cy="210" r="140" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="2" />
@@ -96,7 +97,10 @@ async function startFocus(task: Task) {
       <div class="relative flex items-center justify-between">
         <span class="text-[13px] font-medium text-nighttext">{{ fmt.longDate(runtime.today) }}</span>
         <div class="flex items-center gap-1">
-          <NuxtLink to="/notifications" class="tap relative text-cream" :aria-label="unread ? t('today.notificationsNew', { n: unread }) : t('today.notifications')" data-testid="bell">
+          <NuxtLink to="/reminders" class="tap text-paper" :aria-label="t('reminders.title')" data-testid="to-reminders">
+            <UIcon name="i-lucide-alarm-clock" class="size-[22px]" />
+          </NuxtLink>
+          <NuxtLink to="/notifications" class="tap relative text-paper" :aria-label="unread ? t('today.notificationsNew', { n: unread }) : t('today.notifications')" data-testid="bell">
             <UIcon name="i-lucide-bell" class="size-[22px]" />
             <span v-if="unread" class="absolute right-[9px] top-[9px] size-[9px] rounded-full border-2 border-night bg-b1" data-testid="unread-dot" />
           </NuxtLink>
@@ -117,7 +121,7 @@ async function startFocus(task: Task) {
         </div>
       </div>
 
-      <NuxtLink v-if="nextReminder" to="/reminders" class="relative mt-4 flex min-h-[44px] items-center gap-2.5 rounded-full bg-night2 px-3.5 text-cream" :aria-label="`${t('today.nextReminder')}: ${fmt.time(nextReminder.at)} ${nextReminder.title}`" data-testid="next-reminder">
+      <NuxtLink v-if="nextReminder" to="/reminders" class="relative mt-4 flex min-h-[44px] items-center gap-2.5 rounded-full bg-night2 px-3.5 text-paper" :aria-label="`${t('today.nextReminder')}: ${fmt.time(nextReminder.at)} ${nextReminder.title}`" data-testid="next-reminder">
         <UIcon name="i-lucide-alarm-clock" class="size-[18px] shrink-0 text-mint" />
         <span class="shrink-0 text-[14px] font-bold text-mint">{{ nextReminder.date === runtime.today ? fmt.time(nextReminder.at) : `${fmt.relativeDay(nextReminder.date)} ${fmt.time(nextReminder.at)}` }}</span>
         <span class="min-w-0 grow truncate text-[14px]">{{ nextReminder.title }}</span>
@@ -140,7 +144,7 @@ async function startFocus(task: Task) {
       </NuxtLink>
 
       <!-- Up next: the first unfinished Top task -->
-      <div v-if="upNext" class="next relative overflow-hidden rounded-[22px] bg-white p-4 pl-5" data-testid="top3-row">
+      <div v-if="upNext" class="next relative overflow-hidden rounded-[22px] bg-card p-4 pl-5" data-testid="top3-row">
         <span class="absolute inset-y-0 left-0 w-1.5" :style="{ background: BOX_STYLES[upNext.box].solid }" aria-hidden="true" />
         <div class="flex items-center justify-between gap-2">
           <span class="text-[12px] font-semibold text-brand">{{ t('today.upNext') }}</span>
@@ -188,7 +192,7 @@ async function startFocus(task: Task) {
       </div>
 
       <!-- No Top tasks yet: one way forward -->
-      <div v-else-if="loaded && !top3.length" class="flex flex-col items-center gap-3 rounded-[22px] bg-white p-6 text-center" data-testid="hero-empty">
+      <div v-else-if="loaded && !top3.length" class="flex flex-col items-center gap-3 rounded-[22px] bg-card p-6 text-center" data-testid="hero-empty">
         <span class="flex size-14 items-center justify-center rounded-full bg-brand-tint text-brand"><UIcon name="i-lucide-star" class="size-7" /></span>
         <span class="display text-[18px] font-semibold">{{ t('today.noTop3Title', { top: topN }) }}</span>
         <UButton v-if="planTasks.length" to="/plan" block size="xl" class="h-[52px] whitespace-nowrap rounded-[14px] text-[15px] font-semibold" icon="i-lucide-layout-grid" :label="t('today.pickFromPlan')" data-testid="pick-from-plan" />

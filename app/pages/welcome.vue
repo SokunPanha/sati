@@ -47,7 +47,7 @@ async function allow() {
 <template>
   <div class="welcome flex min-h-dvh flex-col bg-night" data-testid="page-welcome">
     <!-- Hero (continues the splash) -->
-    <section class="relative overflow-hidden px-[22px] pb-10 text-cream" :class="step === 'profile' ? 'pt-4' : 'pt-12'">
+    <section class="relative overflow-hidden px-[22px] pb-10 text-paper" :class="step === 'profile' ? 'pt-4' : 'pt-12'">
       <svg width="520" height="520" viewBox="0 0 520 520" class="rings pointer-events-none absolute left-1/2 top-[-90px] -translate-x-1/2" aria-hidden="true">
         <circle cx="260" cy="260" r="250" fill="none" stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="2" />
         <circle cx="260" cy="260" r="185" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="2" />
@@ -63,7 +63,7 @@ async function allow() {
               type="button"
               :aria-pressed="locale === l.code"
               class="h-9 min-w-[64px] whitespace-nowrap rounded-full px-3.5 text-[13px] transition-colors"
-              :class="locale === l.code ? 'bg-cream font-semibold text-night' : 'text-nighttext'"
+              :class="locale === l.code ? 'bg-paper font-semibold text-night' : 'text-nighttext'"
               :data-testid="`lang-${l.code}`"
               @click="setLocale(l.code)"
             >
@@ -77,7 +77,7 @@ async function allow() {
           <h1 class="rise display m-0 text-[30px] font-bold" style="animation-delay: 120ms">{{ t('welcome.hello') }}</h1>
           <p class="rise m-0 max-w-[330px] text-[15px] text-nighttext" style="animation-delay: 180ms">{{ t('welcome.intro') }}</p>
           <div class="rise flex flex-wrap justify-center gap-2 pt-1" style="animation-delay: 240ms">
-            <span v-for="c in chips" :key="c.key" class="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-nightline bg-night2/60 px-3 text-[12.5px] text-cream">
+            <span v-for="c in chips" :key="c.key" class="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-nightline bg-night2/60 px-3 text-[12.5px] text-paper">
               <UIcon :name="c.icon" class="size-3.5 text-mint" />{{ t(`landing.f.${c.key}`) }}
             </span>
           </div>
@@ -115,7 +115,7 @@ async function allow() {
               autocomplete="given-name"
               class="min-w-0 flex-1"
               :placeholder="t('welcome.namePlaceholder')"
-              :ui="{ root: 'w-full', base: 'h-[54px] rounded-[14px] border border-edge bg-white px-3.5 text-[17px] text-ink placeholder:text-faint focus:border-brand focus:ring-1 focus:ring-brand' }"
+              :ui="{ root: 'w-full', base: 'h-[54px] rounded-[14px] border border-edge bg-card px-3.5 text-[17px] text-ink placeholder:text-faint focus:border-brand focus:ring-1 focus:ring-brand' }"
               data-testid="welcome-name"
             />
           </div>
@@ -151,7 +151,7 @@ async function allow() {
         <NotifyInfo />
         <div class="mt-auto flex flex-col gap-2.5">
           <UButton v-if="notify.permission.value === 'default'" block size="xl" class="h-14 whitespace-nowrap rounded-2xl text-[16px] font-semibold" icon="i-lucide-bell" :label="t('welcome.allow')" data-testid="welcome-allow" @click="allow" />
-          <UButton block size="xl" :color="notify.permission.value === 'default' ? 'neutral' : 'primary'" :variant="notify.permission.value === 'default' ? 'outline' : 'solid'" class="h-[52px] whitespace-nowrap rounded-2xl text-[15px] font-semibold" :class="notify.permission.value === 'default' ? 'bg-white' : ''" :label="notify.permission.value === 'default' ? t('welcome.later') : t('welcome.start')" data-testid="welcome-skip" @click="done" />
+          <UButton block size="xl" :color="notify.permission.value === 'default' ? 'neutral' : 'primary'" :variant="notify.permission.value === 'default' ? 'outline' : 'solid'" class="h-[52px] whitespace-nowrap rounded-2xl text-[15px] font-semibold" :class="notify.permission.value === 'default' ? 'bg-card' : ''" :label="notify.permission.value === 'default' ? t('welcome.later') : t('welcome.start')" data-testid="welcome-skip" @click="done" />
         </div>
       </template>
     </section>

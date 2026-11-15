@@ -71,6 +71,9 @@ export default defineNuxtConfig({
       // Catch the browser's install offer as early as possible (it fires once, often before the app's JS
       // has loaded), so the landing page's Install button can open the real install dialog.
       script: [{
+        // Light / dark before the first paint (Settings → App; "auto" follows the phone), so there is no flash.
+        innerHTML: "(function(){try{var t=localStorage.getItem('sati-theme')||'auto';if(t==='dark'||(t==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}})()"
+      }, {
         innerHTML: "window.__satiInstall=null;addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__satiInstall=e;dispatchEvent(new Event('sati-install-ready'))});addEventListener('appinstalled',function(){window.__satiInstall=null})"
       }]
     }

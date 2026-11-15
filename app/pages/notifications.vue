@@ -23,11 +23,15 @@ const ICONS: Record<NotifKind, string> = {
   test: 'i-lucide-bell-ring'
 }
 function tone(kind: NotifKind) {
-  if (kind === 'routine' || kind === 'due') return { bg: '#FBE9DF', fg: '#8A3409' }
-  return { bg: '#E3F0EC', fg: '#0F6E64' }
+  if (kind === 'routine' || kind === 'due') return { bg: 'var(--color-b1-bg)', fg: 'var(--color-b1-tx)' }
+  return { bg: 'var(--color-brand-tint)', fg: 'var(--color-brand)' }
 }
 const when = (n: AppNotification) => ymd(n.at) === runtime.today ? fmt.time(n.at) : `${fmt.shortDate(ymd(n.at))} ${fmt.time(n.at)}`
 const taskFor = (n: AppNotification) => n.action === 'focus' && n.taskId ? tasks.value.find(x => x.id === n.taskId && x.status === 'active') : undefined
+
+async function readAll() {
+  await requireDb().notifications.where('id').anyOf(fresh.value.map(n => n.id)).modify({ read: true })
+}
 
 async function read(n: AppNotification) {
   await requireDb().notifications.update(n.id, { read: true })
@@ -62,6 +66,9 @@ async function clearEarlier() {
 <template>
   <div class="flex min-h-dvh flex-col gap-[18px] px-[22px] pt-4 pb-safe" data-testid="page-notifications">
     <PageHeader :title="t('notifs.title')" back="/">
+      <button v-if="fresh.length" type="button" class="tap text-ink" :aria-label="t('notifs.readAll')" :title="t('notifs.readAll')" data-testid="notifs-read-all" @click="readAll">
+        <UIcon name="i-lucide-check-check" class="size-5" />
+      </button>
       <NuxtLink to="/settings#notifications" class="tap -mr-2.5 text-ink" :aria-label="t('notifs.settings')">
         <UIcon name="i-lucide-sliders-horizontal" class="size-5" />
       </NuxtLink>
@@ -80,7 +87,7 @@ async function clearEarlier() {
       </div>
       <template v-for="n in fresh" :key="n.id">
         <div v-if="n.kind === 'reminder'" class="flex gap-3 rounded-2xl bg-rem-bg p-3.5" :class="n.focusMin ? '' : 'items-center'" data-testid="notif-new">
-          <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-rem"><UIcon name="i-lucide-alarm-clock" class="size-5" /></span>
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-rem"><UIcon name="i-lucide-alarm-clock" class="size-5" /></span>
           <div class="flex min-w-0 grow flex-col gap-2">
             <div class="flex flex-col gap-0.5">
               <span class="text-[15px] font-semibold text-rem-tx">{{ n.title }}</span>
@@ -90,10 +97,10 @@ async function clearEarlier() {
               <button type="button" class="flex h-11 items-center gap-1.5 whitespace-nowrap rounded-[10px] bg-rem px-3.5 text-[13px] font-semibold text-white" data-testid="notif-reminder-focus" @click="focusReminder(n)">
                 <UIcon name="i-lucide-play" class="size-4" />{{ t('notifs.startFocusMin', { n: n.focusMin }) }}
               </button>
-              <button type="button" class="flex h-11 items-center whitespace-nowrap rounded-[10px] bg-white px-3.5 text-[13px] font-medium text-rem-tx" @click="read(n)">{{ t('notifs.gotIt') }}</button>
+              <button type="button" class="flex h-11 items-center whitespace-nowrap rounded-[10px] bg-card px-3.5 text-[13px] font-medium text-rem-tx" @click="read(n)">{{ t('notifs.gotIt') }}</button>
             </div>
           </div>
-          <button v-if="!n.focusMin" type="button" class="h-11 shrink-0 rounded-[10px] bg-white px-3 text-[12px] font-semibold text-rem-tx" @click="read(n)">{{ t('notifs.gotIt') }}</button>
+          <button v-if="!n.focusMin" type="button" class="h-11 shrink-0 rounded-[10px] bg-card px-3 text-[12px] font-semibold text-rem-tx" @click="read(n)">{{ t('notifs.gotIt') }}</button>
         </div>
         <div v-else class="card flex gap-3 p-3.5" data-testid="notif-new">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-xl" :style="{ background: tone(n.kind).bg, color: tone(n.kind).fg }"><UIcon :name="ICONS[n.kind]" class="size-5" /></span>
@@ -104,8 +111,8 @@ async function clearEarlier() {
             </div>
             <div class="flex flex-wrap gap-2">
               <button v-if="taskFor(n)" type="button" class="flex h-11 items-center rounded-[10px] bg-brand px-3.5 text-[13px] font-semibold text-white" @click="focusOn(n)">{{ t('notifs.startFocus') }}</button>
-              <button v-else-if="n.url !== '/notifications'" type="button" class="flex h-11 items-center rounded-[10px] bg-ink px-3.5 text-[13px] font-semibold text-white" @click="open(n)">{{ t('notifs.open') }}</button>
-              <button type="button" class="flex h-11 items-center rounded-[10px] border border-edge bg-white px-3.5 text-[13px] font-medium text-ink" @click="read(n)">{{ t('notifs.gotIt') }}</button>
+              <button v-else-if="n.url !== '/notifications'" type="button" class="flex h-11 items-center rounded-[10px] bg-sel px-3.5 text-[13px] font-semibold text-sel-tx" @click="open(n)">{{ t('notifs.open') }}</button>
+              <button type="button" class="flex h-11 items-center rounded-[10px] border border-edge bg-card px-3.5 text-[13px] font-medium text-ink" @click="read(n)">{{ t('notifs.gotIt') }}</button>
             </div>
           </div>
         </div>

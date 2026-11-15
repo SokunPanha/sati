@@ -174,6 +174,12 @@ export const useTasks = shared(() => {
     await requireDb().tasks.update(id, { top3Date: day, top3Order: order, planDate: null })
     return true
   }
+  /** Put a Top task first, so it becomes "Up next". */
+  async function makeUpNext(id: string) {
+    const first = Math.min(0, ...top3.value.map(t => t.top3Order))
+    await requireDb().tasks.update(id, { top3Order: first - 1 })
+  }
+
   async function removeFromTop3(id: string) {
     await requireDb().tasks.update(id, { top3Date: null, carriedFrom: null })
   }
@@ -213,7 +219,7 @@ export const useTasks = shared(() => {
 
   return {
     tasks, loaded, inbox, active, routines, routinesToday, top3, routineLogs,
-    byBox, top3For, routineDone, streakOf,
+    byBox, top3For, routineDone, streakOf, makeUpNext,
     capture, sort, moveToBox, remove, setDone, addToTop3, removeFromTop3, planFor, unplan, clearBox,
     toggleRoutine, markRoutineDone
   }

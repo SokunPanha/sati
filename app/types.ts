@@ -20,6 +20,13 @@ export interface Repeat {
   days: number[]
 }
 
+/** A small step inside a task. */
+export interface ChecklistItem {
+  id: string
+  text: string
+  done: boolean
+}
+
 export interface Task {
   id: string
   title: string
@@ -45,6 +52,8 @@ export interface Task {
   createdAt: number
   sortedAt: number | null
   doneAt: number | null
+  /** small steps inside the task (optional) */
+  checklist?: ChecklistItem[]
 }
 
 export interface FocusSession {

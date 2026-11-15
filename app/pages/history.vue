@@ -4,6 +4,7 @@ import type { Box, FocusSession, HistoryEvent, RoutineLog } from '~/types'
 const { t } = useI18n()
 const fmt = useFmt()
 const { settings } = useSettings()
+const toast = useToast()
 
 type Mode = 'day' | 'week' | 'month' | 'custom'
 const mode = ref<Mode>('week')
@@ -81,7 +82,16 @@ const totals = computed(() => {
   }
 })
 
-interface Entry { key: string, at: number, title: string, box: Box | null, sub: string, warn: boolean }
+interface Entry { key: string, at: number, title: string, box: Box | null, sub: string, warn: boolean, reopenId?: string }
+// A finished task can be reopened from here (it goes back to its box, as it was)
+const { tasks: allTasks, setDone } = useTasks()
+const doneIds = computed(() => new Set(allTasks.value.filter(x => x.status === 'done').map(x => x.id)))
+async function reopen(id: string) {
+  const task = allTasks.value.find(x => x.id === id)
+  if (!task) return
+  await setDone(task, false)
+  toast.add({ title: t('history.reopened', { title: task.title }), color: 'success', icon: 'i-lucide-rotate-ccw' })
+}
 const timeline = computed(() => viewDays.value.map((day) => {
   const groups = new Map<string, { title: string, box: Box | null, at: number, min: number, count: number, early: number, done: boolean, routine: boolean, routineMin: number }>()
   const grab = (key: string, title: string, box: Box | null, at: number) => {
@@ -109,7 +119,7 @@ const timeline = computed(() => viewDays.value.map((day) => {
     if (g.count) parts.push(t('common.sessions', g.count), fmt.duration(g.min))
     else if (g.routine && g.routineMin) parts.push(fmt.duration(g.routineMin))
     if (g.early && !g.done) parts.push(t('history.endedEarly'))
-    return { key, at: g.at, title: g.title, box: g.box, sub: parts.join(' · '), warn: false }
+    return { key, at: g.at, title: g.title, box: g.box, sub: parts.join(' · '), warn: false, reopenId: g.done && !g.routine && doneIds.value.has(key) ? key : undefined }
   })
   for (const e of fEvents.value.filter(x => x.date === day && x.type === 'carried')) {
     entries.push({ key: e.id, at: e.at, title: e.title, box: e.box, sub: t('history.notFinished', { date: fmt.weekdayShort(e.toDate || day) }), warn: true })
@@ -140,14 +150,14 @@ const dayTitle = (day: string) => day === runtime.today ? `${t('common.today')} 
   <div class="flex flex-col gap-[18px] px-[22px] pt-7" style="padding-bottom: calc(120px + env(safe-area-inset-bottom))" data-testid="page-history">
     <header class="flex items-end justify-between gap-3">
       <h1 class="display m-0 min-w-0 truncate text-[34px] font-bold">{{ t('history.title') }}</h1>
-      <button type="button" class="flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] border bg-white px-3 text-[13px] font-medium text-ink" :class="filtered ? 'border-brand' : 'border-edge'" :aria-expanded="showFilter" data-testid="history-filter" @click="showFilter = !showFilter">
+      <button type="button" class="flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] border bg-card px-3 text-[13px] font-medium text-ink" :class="filtered ? 'border-brand' : 'border-edge'" :aria-expanded="showFilter" data-testid="history-filter" @click="showFilter = !showFilter">
         <UIcon name="i-lucide-funnel" class="size-4" />{{ t('history.filter') }}
       </button>
     </header>
 
     <div v-if="showFilter" class="card flex flex-col gap-3 p-3">
       <div class="flex flex-wrap gap-1.5">
-        <button type="button" class="h-10 rounded-full px-3 text-[13px]" :class="!filterBox ? 'bg-ink font-semibold text-white' : 'border border-edge text-ink'" @click="filterBox = 0">{{ t('history.allBoxes') }}</button>
+        <button type="button" class="h-10 rounded-full px-3 text-[13px]" :class="!filterBox ? 'bg-sel font-semibold text-sel-tx' : 'border border-edge text-ink'" @click="filterBox = 0">{{ t('history.allBoxes') }}</button>
         <button
           v-for="b in BOXES"
           :key="b"
@@ -196,7 +206,7 @@ const dayTitle = (day: string) => day === runtime.today ? `${t('common.today')} 
         </button>
       </div>
       <span class="text-center text-[12px] text-soft">{{ t('history.chartHint') }}</span>
-      <button v-if="selectedDay" type="button" class="mx-auto flex h-11 items-center rounded-full border border-edge bg-white px-4 text-[13px] font-medium" @click="selectedDay = null">{{ t('history.showAll') }}</button>
+      <button v-if="selectedDay" type="button" class="mx-auto flex h-11 items-center rounded-full border border-edge bg-card px-4 text-[13px] font-medium" @click="selectedDay = null">{{ t('history.showAll') }}</button>
     </div>
 
     <div class="grid grid-cols-3 gap-2" data-testid="history-totals">
@@ -219,7 +229,10 @@ const dayTitle = (day: string) => day === runtime.today ? `${t('common.today')} 
             <span class="text-[14px] font-medium">{{ e.title }}</span>
             <span class="text-[12px]" :class="e.warn ? 'text-b1-tx' : 'text-soft'">{{ e.sub }}</span>
           </div>
-          <BoxBadge v-if="e.box" :box="e.box" short />
+          <button v-if="e.reopenId" type="button" class="flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-edge bg-card px-3 text-[13px] font-medium text-ink" :aria-label="`${e.title}: ${t('history.reopen')}`" data-testid="history-reopen" @click="reopen(e.reopenId)">
+            <UIcon name="i-lucide-rotate-ccw" class="size-3.5" />{{ t('history.reopen') }}
+          </button>
+          <BoxBadge v-else-if="e.box" :box="e.box" short />
         </div>
         <div v-if="d.foot" class="py-3 text-[14px] text-soft" :class="d.entries.length ? 'border-t border-rule2' : ''">{{ d.foot }}</div>
       </div>

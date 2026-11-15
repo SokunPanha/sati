@@ -2,7 +2,6 @@
 import type { Reminder } from '~/types'
 
 const { t } = useI18n()
-const topN = useTopN()
 const fmt = useFmt()
 const { openCapture } = useSheets()
 const { upcoming, past } = useReminders()
@@ -41,10 +40,10 @@ const dayLabel = (day: string) => day === runtime.today ? `${t('common.today')} 
     <section v-for="g in groups" :key="g.day" class="flex flex-col gap-2">
       <h2 class="section-label caps">{{ dayLabel(g.day) }}</h2>
       <div class="card flex flex-col overflow-hidden">
-        <button v-for="r in g.items" :key="r.id" type="button" class="flex min-h-[64px] items-center gap-3.5 border-b border-rule2 px-4 py-2.5 text-left text-ink last:border-b-0" data-testid="reminder-row" @click="openCapture('reminder', r.id)">
-          <span class="w-[68px] shrink-0 text-[15px] font-bold leading-tight" :class="r.done ? 'text-soft' : 'text-rem-tx'">{{ fmt.time(r.at) }}</span>
+        <button v-for="r in g.items" :key="r.id" type="button" class="flex min-h-[64px] items-center gap-3 border-b border-rule2 px-4 py-2.5 text-left text-ink last:border-b-0" data-testid="reminder-row" @click="openCapture('reminder', r.id)">
+          <span class="w-[52px] shrink-0 text-[15px] font-bold leading-tight" :class="r.done ? 'text-soft' : 'text-rem-tx'">{{ fmt.time(r.at) }}</span>
           <span class="flex min-w-0 grow flex-col gap-0.5">
-            <span class="text-[15px] font-medium" :class="r.done ? 'text-soft' : ''">{{ r.title }}</span>
+            <span class="line-clamp-2 text-[15px] font-medium" :class="r.done ? 'text-soft' : ''">{{ r.title }}</span>
             <span class="flex items-center gap-1 text-[12px] text-soft"><UIcon v-if="r.repeat !== 'none'" name="i-lucide-repeat" class="size-3 shrink-0" />{{ alertText(r) }}</span>
           </span>
           <UIcon name="i-lucide-chevron-right" class="size-4 shrink-0 text-soft" />
@@ -52,6 +51,5 @@ const dayLabel = (day: string) => day === runtime.today ? `${t('common.today')} 
       </div>
     </section>
 
-    <span class="mt-auto text-center text-[12px] text-soft">{{ t('reminders.hint') }}<br>{{ t('reminder.note', { top: topN }) }}</span>
   </div>
 </template>
