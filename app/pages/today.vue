@@ -8,9 +8,9 @@ const { t } = useI18n()
 const topN = useTopN()
 const fmt = useFmt()
 const { active: profile } = useProfile()
-const { sheets, openSort, openTask, openCapture } = useSheets()
+const { sheets, openTask, openCapture } = useSheets()
 const toast = useToast()
-const { top3, inbox, active: planTasks, routines, routinesToday, routineDone, streakOf, setDone, toggleRoutine, loaded } = useTasks()
+const { top3, active: planTasks, routines, routinesToday, routineDone, streakOf, setDone, toggleRoutine, loaded } = useTasks()
 const { next: nextReminder, todayCount } = useReminders()
 const { focus, remainingMs, start } = useFocus()
 
@@ -39,7 +39,7 @@ const ringOffset = computed(() => RING * (1 - (top3.value.length ? doneCount.val
 
 function meta(task: Task) {
   const parts: string[] = []
-  if (task.status !== 'done') parts.push(t('common.min', { n: task.sessionMin }))
+  if (task.status !== 'done' && task.sessionMin) parts.push(t('common.min', { n: task.sessionMin }))
   if (task.carriedFrom) parts.push(t('today.carried'))
   return parts.join(' · ')
 }
@@ -138,7 +138,7 @@ async function startFocus(task: Task) {
             <span v-if="meta(upNext)" class="text-[13px] text-soft">{{ meta(upNext) }}</span>
           </button>
         </div>
-        <button v-if="!focus" type="button" class="mt-3.5 flex h-[50px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-[14px] bg-brand text-[15px] font-semibold text-white shadow-[0_10px_22px_-12px_rgba(15,110,100,0.8)]" data-testid="start-focus" @click="startFocus(upNext)">
+        <button v-if="!focus && upNext.sessionMin" type="button" class="mt-3.5 flex h-[50px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-[14px] bg-brand text-[15px] font-semibold text-white shadow-[0_10px_22px_-12px_rgba(15,110,100,0.8)]" data-testid="start-focus" @click="startFocus(upNext)">
           <UIcon name="i-lucide-play" class="size-[18px]" />{{ t('today.startFocus', { n: upNext.sessionMin }) }}
         </button>
       </div>
@@ -154,7 +154,7 @@ async function startFocus(task: Task) {
             </span>
           </button>
           <button
-            v-if="!focus"
+            v-if="!focus && task.sessionMin"
             type="button"
             class="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand"
             :aria-label="`${task.title}: ${t('today.startFocus', { n: task.sessionMin })}`"
@@ -177,8 +177,7 @@ async function startFocus(task: Task) {
         <span class="flex size-14 items-center justify-center rounded-full bg-brand-tint text-brand"><UIcon name="i-lucide-star" class="size-7" /></span>
         <span class="display text-[18px] font-semibold">{{ t('today.noTop3Title', { top: topN }) }}</span>
         <UButton v-if="planTasks.length" to="/plan" block size="xl" class="h-[52px] whitespace-nowrap rounded-[14px] text-[15px] font-semibold" icon="i-lucide-layout-grid" :label="t('today.pickFromPlan')" data-testid="pick-from-plan" />
-        <UButton v-if="inbox.length" block size="xl" :color="planTasks.length ? 'neutral' : 'primary'" :variant="planTasks.length ? 'outline' : 'solid'" class="h-[52px] whitespace-nowrap rounded-[14px] text-[15px] font-semibold" icon="i-lucide-inbox" :label="t('today.sortInbox', { n: inbox.length })" data-testid="sort-inbox" @click="openSort()" />
-        <UButton v-if="!planTasks.length && !inbox.length" block size="xl" class="h-[52px] whitespace-nowrap rounded-[14px] text-[15px] font-semibold" icon="i-lucide-plus" :label="t('today.addTask')" data-testid="add-first" @click="openCapture('task')" />
+        <UButton v-if="!planTasks.length" block size="xl" class="h-[52px] whitespace-nowrap rounded-[14px] text-[15px] font-semibold" icon="i-lucide-plus" :label="t('today.addTask')" data-testid="add-first" @click="openCapture('task')" />
       </div>
 
       <!-- Habits -->
@@ -197,7 +196,7 @@ async function startFocus(task: Task) {
               </span>
             </button>
             <button
-              v-if="!focus"
+              v-if="!focus && r.sessionMin"
               type="button"
               class="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand"
               :aria-label="`${r.title}: ${t('today.startFocus', { n: r.sessionMin })}`"

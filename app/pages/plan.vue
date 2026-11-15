@@ -35,7 +35,7 @@ function toggleSection(k: Box | 'routines') {
 const clearOpen = ref(false)
 
 function sub(task: Task) {
-  return t('common.min', { n: task.sessionMin })
+  return task.sessionMin ? t('common.min', { n: task.sessionMin }) : ''
 }
 /** One tap on the star: add to / remove from today's Top list. */
 async function toggleTop(task: Task) {
@@ -54,16 +54,18 @@ const cells: Box[] = [1, 2, 3, 4]
       </div>
     </div>
 
-    <button v-if="inbox.length" type="button" class="mx-[22px] mt-4 flex items-center gap-3 rounded-2xl bg-ink px-4 py-3.5 text-left text-white" style="width: calc(100% - 44px)" data-testid="inbox-bar" @click="openSort()">
-      <span class="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-cream text-[14px] font-bold text-ink">{{ inbox.length }}</span>
-      <span class="flex grow flex-col">
-        <span class="text-[15px] font-semibold">{{ t('plan.inbox', { n: inbox.length }) }}</span>
-        <span class="text-[12px] text-ringc">{{ t('plan.inboxSub') }}</span>
-      </span>
-      <span class="text-[14px] font-semibold text-mint">{{ t('plan.sort') }}</span>
-    </button>
 
     <div class="mx-[22px] mt-4 flex flex-col gap-4" data-testid="plan-list">
+      <!-- Tasks saved before a box was required: open one and pick its box -->
+      <section v-if="inbox.length" class="flex flex-col gap-2" data-testid="no-box">
+        <h2 class="m-0 flex min-h-[40px] items-center gap-2 text-[13px] font-semibold text-soft">{{ t('plan.noBox') }}<span class="font-medium">{{ inbox.length }}</span></h2>
+        <div class="card flex flex-col overflow-hidden">
+          <button v-for="task in inbox" :key="task.id" type="button" class="flex min-h-[52px] items-center border-b border-rule2 py-2.5 pl-4 pr-3 text-left last:border-b-0" data-testid="no-box-row" @click="openSort(task.id)">
+            <span class="min-w-0 grow truncate text-[14px] font-medium text-ink" :title="task.title">{{ task.title }}</span>
+            <UIcon name="i-lucide-chevron-right" class="size-[18px] shrink-0 text-soft" />
+          </button>
+        </div>
+      </section>
       <section v-for="b in cells" :key="b" class="flex flex-col gap-2" :data-testid="`box-${b}`">
         <h2 class="m-0">
           <button
@@ -117,7 +119,7 @@ const cells: Box[] = [1, 2, 3, 4]
         <button v-for="r in routines" :key="r.id" type="button" class="flex min-h-[52px] items-center gap-2 border-b border-rule2 px-4 py-2.5 text-left last:border-b-0" data-testid="routine-row" @click="openTask(r.id)">
           <span class="flex min-w-0 grow flex-col">
             <span class="truncate text-[14px] font-medium text-ink" :title="r.title">{{ r.title }}</span>
-            <span class="text-[12px] text-soft">{{ [fmt.repeatLabel(r.repeat), t('dur.m', { n: r.sessionMin })].join(' · ') }}</span>
+            <span class="text-[12px] text-soft">{{ [fmt.repeatLabel(r.repeat), r.sessionMin ? t('dur.m', { n: r.sessionMin }) : ''].filter(Boolean).join(' · ') }}</span>
           </span>
           <BoxBadge :box="r.box" short />
         </button>

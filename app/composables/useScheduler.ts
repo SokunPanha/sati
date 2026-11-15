@@ -89,7 +89,7 @@ async function checkDaily(db: ProfileDb, s: Settings, now: number, today: string
       await deliver({
         kind: 'routine',
         title: left.length === 1 ? t('notif.routineTitleOne', { title: first.title }) : t('notif.routineTitle', { n: left.length }),
-        body: t('notif.routineBody', { title: first.title, n: first.sessionMin }),
+        body: first.sessionMin ? t('notif.routineBody', { title: first.title, n: first.sessionMin }) : t('notif.routineBodyNoTime', { title: first.title }),
         url: '/notifications',
         action: 'focus',
         taskId: first.id

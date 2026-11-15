@@ -105,7 +105,7 @@ export const useFocus = shared(() => {
 
   async function start(task: Task, opts: { minutes?: number } = {}) {
     const { settings } = useSettings()
-    const minutes = opts.minutes ?? task.sessionMin ?? settings.value.focusMin
+    const minutes = opts.minutes || task.sessionMin || settings.value.focusMin
     const now = Date.now()
     focus.value = {
       id: uid(),

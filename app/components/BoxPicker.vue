@@ -2,7 +2,7 @@
 import type { Box } from '~/types'
 
 // Pick one of the 4 boxes directly: Do now, Schedule, Limit, Drop. Shared by the capture sheet and the
-// sort sheet so both look and behave the same. `optional`: tapping the chosen box again clears it (→ inbox).
+// edit sheet so both look and behave the same. A box is required to save a task.
 const props = withDefaults(defineProps<{ optional?: boolean, habit?: boolean, testid?: string }>(), { testid: 'box' })
 const model = defineModel<Box | null>({ required: true })
 const { t } = useI18n()
@@ -32,7 +32,7 @@ function pick(b: Box) {
       </button>
     </div>
     <span class="min-h-[18px] px-1 text-[12px] text-soft" :data-testid="`${testid}-result`" :data-box="model ?? ''">
-      {{ habit ? t('sort.routineHint', { top: topN }) : model ? t(`sort.hint${model}`, { top: topN }) : t('capture.sortLater') }}
+      {{ !model ? t('capture.pickBox') : habit ? t('sort.routineHint', { top: topN }) : t(`sort.hint${model}`, { top: topN }) }}
     </span>
   </div>
 </template>

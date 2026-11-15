@@ -12,7 +12,8 @@ const inTop3 = computed(() => task.value?.top3Date === runtime.today)
 const sub = computed(() => {
   const x = task.value
   if (!x) return ''
-  const parts = [fmt.boxLabel(x.box), t('common.min', { n: x.sessionMin })]
+  const parts = x.status === 'inbox' ? [] : [fmt.boxLabel(x.box)]
+  if (x.sessionMin) parts.push(t('common.min', { n: x.sessionMin }))
   if (x.isRoutine) parts.push(fmt.repeatLabel(x.repeat))
   return parts.join(' · ')
 })
@@ -64,7 +65,7 @@ const row = 'flex min-h-[52px] w-full items-center gap-3 border-b border-rule2 p
           <UIcon :name="inTop3 ? 'i-lucide-star-off' : 'i-lucide-star'" class="size-5 text-brand" />
           {{ inTop3 ? t('task.removeTop3', { top: topN }) : t('task.addTop3', { top: topN }) }}
         </button>
-        <button type="button" :class="row" data-testid="action-focus" @click="focusNow">
+        <button v-if="task.sessionMin" type="button" :class="row" data-testid="action-focus" @click="focusNow">
           <UIcon name="i-lucide-play" class="size-5 text-brand" />{{ t('task.startFocus', { n: task.sessionMin }) }}
         </button>
         <button v-if="!task.isRoutine" type="button" :class="row" @click="done">

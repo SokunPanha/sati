@@ -32,13 +32,14 @@ export function useTaskForm() {
   const { reminders, save: saveReminder, remove: removeReminder } = useReminders()
 
   const form = reactive<TaskFormState>({
-    title: '', description: '', box: null, repeatType: 'none', days: [], sessionMin: 45,
+    title: '', description: '', box: null, repeatType: 'none', days: [], sessionMin: 0,
     addTop: false, remind: false, remDate: runtime.today, remTime: '09:00', remAlert: 0
   })
   const isHabit = computed(() => form.repeatType !== 'none')
   const toTop = computed(() => form.addTop && !isHabit.value)
-  /** null = inbox. Defaults: a habit → Schedule, a Top task → Do now. */
-  const effectiveBox = computed<Box | null>(() => form.box ?? (isHabit.value ? 2 : toTop.value ? 1 : null))
+  /** A box is required: nothing is saved until one is picked ("Add to Top" picks Do now when none is chosen). */
+  const effectiveBox = computed<Box | null>(() => form.box)
+  const canSave = computed(() => !!form.title.trim() && !!form.box)
 
   const reminderOf = (taskId: string) => reminders.value.find(r => r.taskId === taskId && !r.done) || null
 
@@ -46,7 +47,7 @@ export function useTaskForm() {
   function reset(remind = false) {
     const n = nextHour()
     Object.assign(form, {
-      title: '', description: '', box: null, repeatType: 'none', days: [], sessionMin: settings.value.focusMin,
+      title: '', description: '', box: null, repeatType: 'none', days: [], sessionMin: 0,
       addTop: false, remind, remDate: n.day, remTime: n.time, remAlert: 0
     })
   }
@@ -61,7 +62,7 @@ export function useTaskForm() {
       box: task.status === 'inbox' ? null : task.box,
       repeatType: task.repeat.type,
       days: [...task.repeat.days],
-      sessionMin: task.sessionMin || settings.value.focusMin,
+      sessionMin: task.sessionMin || 0,
       addTop: task.top3Date === runtime.today,
       remind: !!rem,
       remDate: rem?.date ?? n.day,
@@ -73,6 +74,10 @@ export function useTaskForm() {
   /** Checks before saving; shows a toast and returns false when something is missing. */
   function valid() {
     if (!form.title.trim()) return false
+    if (!form.box) {
+      toast.add({ title: t('capture.pickBox'), color: 'warning' })
+      return false
+    }
     if (form.repeatType === 'days' && !form.days.length) {
       toast.add({ title: t('sort.pickDays'), color: 'warning' })
       return false
@@ -86,28 +91,19 @@ export function useTaskForm() {
 
   /** Write the form onto a task (new or existing). Returns false if the Top list was full. */
   async function apply(task: Task) {
-    const db = requireDb()
     const b = effectiveBox.value
-    if (b) {
-      await sort(task.id, {
-        title: form.title,
-        description: form.description,
-        ...boxFlags(b),
-        repeat: { type: form.repeatType, days: form.repeatType === 'days' ? [...form.days] : [] },
-        // area and due date are no longer in the form: keep what older tasks already have
-        area: task.area,
-        dueDate: task.dueDate,
-        sessionMin: form.sessionMin,
-        sessionsPlanned: 1
-      })
-    }
-    else {
-      // no box: the task (back) in the inbox, with the edited text and focus time
-      await db.tasks.update(task.id, {
-        title: form.title.trim(), description: form.description.trim(), sessionMin: form.sessionMin,
-        status: task.status === 'done' ? 'done' : 'inbox', repeat: { type: 'none', days: [] }, isRoutine: false
-      })
-    }
+    if (!b) return true // valid() already refused: a box is required
+    await sort(task.id, {
+      title: form.title,
+      description: form.description,
+      ...boxFlags(b),
+      repeat: { type: form.repeatType, days: form.repeatType === 'days' ? [...form.days] : [] },
+      // area and due date are no longer in the form: keep what older tasks already have
+      area: task.area,
+      dueDate: task.dueDate,
+      sessionMin: form.sessionMin,
+      sessionsPlanned: 1
+    })
 
     // Reminder: create / update / remove the one that belongs to this task
     const cur = reminderOf(task.id)
@@ -134,5 +130,5 @@ export function useTaskForm() {
     ? t('capture.saveHabit')
     : effectiveBox.value ? t('capture.saveTo', { name: t(`box.${effectiveBox.value}`) }) : t('capture.save'))
 
-  return { form, isHabit, toTop, effectiveBox, reset, load, valid, apply, saveLabel }
+  return { form, isHabit, toTop, effectiveBox, canSave, reset, load, valid, apply, saveLabel }
 }

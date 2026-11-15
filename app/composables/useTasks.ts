@@ -82,7 +82,7 @@ export const useTasks = shared(() => {
       box: 4,
       area: '',
       dueDate: null,
-      sessionMin: sessionMin || settings.value.focusMin,
+      sessionMin: sessionMin ?? settings.value.focusMin,
       sessionsPlanned: 1,
       sessionsDone: 0,
       repeat: { type: 'none', days: [] },

@@ -2,12 +2,12 @@
 import type { Box, Repeat } from '~/types'
 
 // The task form. Create (CaptureSheet) and Edit (SortSheet) both use it, so the two always look and work the same:
-// title, description, box, Repeat (habit), focus time, "Add to Top" and "Remind me".
+// title, description, box, Repeat (habit), "Focus time" (off by default), "Add to Top" and "Remind me".
 const props = withDefaults(defineProps<{ testid?: string, autofocus?: boolean }>(), { testid: 'capture', autofocus: false })
 const emit = defineEmits<{ submit: [] }>()
 const title = defineModel<string>('title', { required: true })
 const description = defineModel<string>('description', { required: true })
-/** null = no box picked (stays in / goes to the inbox) */
+/** null = no box picked yet: the form can't be saved until one is */
 const box = defineModel<Box | null>('box', { required: true })
 const repeatType = defineModel<Repeat['type']>('repeatType', { required: true })
 const days = defineModel<number[]>('days', { required: true })
@@ -22,6 +22,12 @@ const { t } = useI18n()
 const topN = useTopN()
 const isHabit = computed(() => repeatType.value !== 'none')
 const id = (name: string) => `${props.testid}-${name}`
+
+/** Focus time is off (0) unless switched on; on starts at the default from Settings. */
+const { settings } = useSettings()
+function toggleFocus() {
+  sessionMin.value = sessionMin.value ? 0 : (settings.value.focusMin || 25)
+}
 
 /** Ticking "Add to Top" with no box chosen selects Do now, so the tiles show where it goes. */
 function toggleTop() {
@@ -58,10 +64,26 @@ function toggleTop() {
 
   <div class="flex flex-col gap-2">
     <span class="text-[13px] font-semibold">{{ t('capture.sortNow') }}</span>
-    <BoxPicker v-model="box" optional :habit="isHabit" :testid="testid" />
+    <BoxPicker v-model="box" :habit="isHabit" :testid="testid" />
   </div>
   <RepeatPicker v-model:type="repeatType" v-model:days="days" />
-  <FocusTimePicker v-model="sessionMin" :testid="testid" />
+  <button
+    type="button"
+    role="switch"
+    :aria-checked="!!sessionMin"
+    class="flex min-h-[48px] items-center gap-3 rounded-2xl border bg-white px-3.5 text-left"
+    :class="sessionMin ? 'border-2 border-brand' : 'border-edge'"
+    :data-testid="id('focus')"
+    @click="toggleFocus"
+  >
+    <span class="flex size-7 shrink-0 items-center justify-center rounded-full" :class="sessionMin ? 'bg-brand text-white' : 'border border-edge text-soft'">
+      <UIcon name="i-lucide-timer" class="size-4" />
+    </span>
+    <span class="grow text-[14px] font-medium text-ink">{{ t('focusTime.label') }}</span>
+    <span v-if="sessionMin" class="shrink-0 whitespace-nowrap text-[13px] text-soft">{{ t('common.min', { n: sessionMin }) }}</span>
+    <UIcon v-if="sessionMin" name="i-lucide-check" class="size-5 shrink-0 text-brand" />
+  </button>
+  <FocusTimePicker v-if="sessionMin" v-model="sessionMin" bare :testid="testid" />
 
   <button
     v-if="!isHabit"

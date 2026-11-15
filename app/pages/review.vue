@@ -8,8 +8,7 @@ const { t } = useI18n()
 const topN = useTopN()
 const fmt = useFmt()
 const toast = useToast()
-const { openSort } = useSheets()
-const { inbox, top3, active, planFor, unplan } = useTasks()
+const { top3, active, planFor, unplan } = useTasks()
 
 const { data: sessions } = useLiveQuery(db => db.sessions.where('date').equals(runtime.today).toArray(), [] as FocusSession[], [() => runtime.today])
 const { data: events } = useLiveQuery(db => db.events.where('date').equals(runtime.today).toArray(), [] as HistoryEvent[], [() => runtime.today])
@@ -49,13 +48,6 @@ async function add(task: Task) {
     </div>
 
     <div class="flex flex-col gap-3 px-[22px] pt-[18px]">
-      <section v-if="inbox.length" class="card flex items-center gap-3 !rounded-[18px] p-4" data-testid="review-inbox">
-        <UIcon name="i-lucide-inbox" class="size-5 shrink-0 text-soft" />
-        <span class="grow text-[14px] font-medium">{{ t('review.inboxCount', inbox.length) }}</span>
-        <button type="button" class="flex h-11 shrink-0 items-center whitespace-nowrap rounded-[10px] bg-ink px-4 text-[13px] font-semibold text-white" @click="openSort()">
-          {{ t('review.sort') }}
-        </button>
-      </section>
 
       <section class="card flex flex-col !rounded-[18px] p-4 pb-2" data-testid="review-top">
         <div class="mb-1 flex items-center gap-2.5">

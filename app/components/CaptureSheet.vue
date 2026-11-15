@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Create: the shared task form (TaskFields, same as Edit). Pick a box / Repeat / Top to file it right away,
-// or nothing to put it in the inbox. "Remind me" also gives the task a reminder. Editing an existing reminder
+// Create: the shared task form (TaskFields, same as Edit). A box is required; Repeat makes it a habit,
+// "Add to Top" puts it on today's list. "Remind me" also gives the task a reminder. Editing an existing reminder
 // (from the Reminders page) shows the reminder form instead.
 const { t } = useI18n()
 const topN = useTopN()
@@ -9,7 +9,7 @@ const fmt = useFmt()
 const { sheets } = useSheets()
 const { capture } = useTasks()
 const { focus } = useFocus()
-const { form, isHabit, toTop, effectiveBox, reset, valid, apply, saveLabel } = useTaskForm()
+const { form, isHabit, toTop, effectiveBox, canSave, reset, valid, apply, saveLabel } = useTaskForm()
 
 const inFocus = computed(() => focus.value?.phase === 'focus')
 /** editing an existing reminder (opened from the Reminders page) */
@@ -42,9 +42,7 @@ async function saveTask() {
       ? { title: t('capture.savedHabit'), color: 'success', icon: 'i-lucide-repeat' }
       : top
         ? { title: t('task.addedTop3', { top: topN.value }), color: 'success', icon: 'i-lucide-star' }
-        : n
-          ? { title: t('capture.savedTo', { name: t(`box.${n}`) }), color: 'success', icon: 'i-lucide-layout-grid' }
-          : { title: t('capture.saved'), color: 'success', icon: 'i-lucide-inbox' }),
+        : { title: t('capture.savedTo', { name: t(`box.${n}`) }), color: 'success', icon: 'i-lucide-layout-grid' }),
     ...reminded
   } as any)
 }
@@ -76,7 +74,7 @@ const title = computed(() => editingReminder.value ? t('reminder.editTitle') : t
         @submit="saveTask"
       />
 
-      <UButton block size="xl" class="h-14 rounded-2xl text-[16px] font-semibold disabled:opacity-50" :disabled="!form.title.trim()" :label="inFocus ? t('capture.saveKeep') : saveLabel" data-testid="capture-save" @click="saveTask" />
+      <UButton block size="xl" class="h-14 rounded-2xl text-[16px] font-semibold disabled:opacity-50" :disabled="!canSave" :label="inFocus ? t('capture.saveKeep') : saveLabel" data-testid="capture-save" @click="saveTask" />
     </template>
 
     <template v-else>

@@ -11,7 +11,7 @@
   "tabs": { "today": "Today", "plan": "Plan", "mindmap": "Mind map", "review": "Tomorrow", "history": "History", "add": "Add", "settings": "Settings" },
   "splash": { "tagline": "Calm mind. One thing at a time.", "loading": "Loading" },
   "repeat": { "label": "Repeat", "never": "Never", "daily": "Daily", "weekdays": "Weekdays", "pick": "Pick days", "weekly": "Weekly", "monthly": "Monthly" },
-  "mindmap": { "title": "Mind map", "new": "New", "newMap": "New mind map", "newIdea": "New idea", "ideas": "{n} ideas", "addChild": "Sub-idea", "addSibling": "Next", "edit": "Edit", "delete": "Delete", "undo": "Undo", "fit": "Fit to screen", "deleteMap": "Delete mind map", "deleteMapTitle": "Delete this mind map?" },
+  "mindmap": { "title": "Mind map", "new": "New", "newMap": "New mind map", "newIdea": "New idea", "ideas": "{n} ideas", "addChild": "Sub-idea", "addSibling": "Next", "edit": "Edit", "delete": "Delete", "undo": "Undo", "fit": "Fit to screen", "deleteMap": "Delete mind map", "deleteMapTitle": "Delete this mind map?", "more": "More", "exportPdf": "Export PDF", "exportFailed": "Could not export the PDF" },
   "focusTime": { "label": "Focus time", "none": "None" },
   "today": {
     "title": "Today",
@@ -80,7 +80,7 @@
   },
   "capture": {
     "title": "Get it out of your head",
-    "sub": "Write it down. Pick a box or Repeat to file it now.",
+    "sub": "Write it down and pick its box.",
     "subFocus": "Write it down and get back to work. Timer keeps running.",
     "placeholder": "Task or idea",
     "taskOrIdea": "Task or idea",
@@ -92,13 +92,13 @@
     "needStop": "Need to stop?",
     "minLeft": "{n} min left. Only if it's truly urgent.",
     "endSession": "End session",
-    "saved": "Saved to inbox", "sortNow": "Which box? (optional)", "sortLater": "Pick nothing to sort it later from the inbox.", "saveTo": "Save to {name}", "savedTo": "Saved to {name}", "saveHabit": "Save habit", "savedHabit": "Saved to your habits"
+    "saved": "Saved to inbox", "sortNow": "Which box?", "pickBox": "Pick a box to save.", "sortLater": "Pick nothing to sort it later from the inbox.", "saveTo": "Save to {name}", "savedTo": "Saved to {name}", "saveHabit": "Save habit", "savedHabit": "Saved to your habits"
   },
   "plan": {
     "subtitle": "All your tasks, by priority",
     "title": "Plan",
     "inbox": "Inbox: {n} to sort",
-    "inboxSub": "Takes about 30 seconds",
+    "noBox": "No box", "inboxSub": "Takes about 30 seconds",
     "sort": "Sort",
     "urgent": "Urgent",
     "notUrgent": "Not urgent",
@@ -257,6 +257,7 @@
     "routineTitle": "{n} routines left today",
     "routineTitleOne": "Keep your {title} streak",
     "routineBody": "{title}: {n} minutes keeps it going.",
+    "routineBodyNoTime": "{title} is still open today.",
     "dueTitle": "Due tomorrow: {title}",
     "dueTodayTitle": "Due today: {title}",
     "dueBody": "Add it to your Top {top} or start a focus session.",

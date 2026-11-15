@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// "Focus time" choice (minutes). Tasks always have one; reminders pass `optional` to get a "None" chip (0).
-const props = defineProps<{ optional?: boolean, testid?: string }>()
+// "Focus time" choice (minutes). Reminders pass `optional` to get a "None" chip (0); the task form shows it
+// (with `bare`, no header) only while its "Focus time" switch is on.
+const props = defineProps<{ optional?: boolean, testid?: string, bare?: boolean }>()
 const minutes = defineModel<number>({ required: true })
 const { t } = useI18n()
 
@@ -19,7 +20,7 @@ const options = computed(() => {
 
 <template>
   <div class="flex flex-col gap-2">
-    <span class="flex items-center gap-1.5 text-[13px] font-semibold">
+    <span v-if="!bare" class="flex items-center gap-1.5 text-[13px] font-semibold">
       <UIcon name="i-lucide-timer" class="size-4" />{{ t('focusTime.label') }}
       <span class="ml-auto font-normal text-soft">{{ minutes ? t('common.min', { n: minutes }) : t('focusTime.none') }}</span>
     </span>
