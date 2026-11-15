@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Bottom bar, icons only: Today · Plan · Mind map · (+) · Tomorrow · History · Settings.
-// The centre + opens the capture sheet. Labels stay as aria-labels for screen readers.
+// Bottom bar: Today · Plan · Mind map · (+) · Tomorrow · History · Settings. Icons only, plus the name of the
+// tab you are on (so you always know where you are). The centre + opens the capture sheet.
 const { t } = useI18n()
 const route = useRoute()
 const { openCapture } = useSheets()
@@ -26,12 +26,12 @@ const right = computed(() => [
         :aria-label="tab.label"
         :title="tab.label"
         :aria-current="route.path === tab.to ? 'page' : undefined"
-        class="flex min-w-0 flex-col items-center justify-center gap-1"
+        class="relative flex min-w-0 flex-col items-center justify-center gap-0.5"
         :class="route.path === tab.to ? 'text-brand' : 'text-soft'"
         :data-testid="`tab-${tab.to.slice(1) || 'today'}`"
       >
         <UIcon :name="tab.icon" class="size-6 shrink-0" />
-        <span class="size-1 rounded-full" :class="route.path === tab.to ? 'bg-brand' : 'bg-transparent'" aria-hidden="true" />
+        <span class="h-[15px] whitespace-nowrap text-[11px] font-semibold leading-[15px]" aria-hidden="true">{{ route.path === tab.to ? tab.label : '' }}</span>
       </NuxtLink>
       <div v-if="gi === 0" class="flex items-start justify-center">
         <button

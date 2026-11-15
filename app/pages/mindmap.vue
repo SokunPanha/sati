@@ -4,8 +4,8 @@ import 'mind-elixir/style.css'
 
 type MindElixirInstance = InstanceType<typeof MindElixir>
 // Mind map (/mindmap). Without ?id: the list of maps and "New map". With ?id: the map editor (Mind Elixir,
-// MIT): drag to move, pinch to zoom, tap an idea to select it, then use the bar below to add, edit,
-// delete or undo. Every change is saved to the profile's database right away.
+// MIT): drag to move, pinch to zoom, tap an idea to select it (double-tap edits it), then use the bar below to
+// add, edit, turn it into a task, delete or undo. Every change is saved to the profile's database right away.
 const { t } = useI18n()
 const fmt = useFmt()
 const route = useRoute()
@@ -20,14 +20,6 @@ let mind: MindElixirInstance | null = null
 let openedId: string | null = null
 const selected = ref(0)
 const rootSelected = ref(false)
-/** id of the map waiting for "Delete?" confirmation (from the list or the editor menu) */
-const deleting = ref<string | null>(null)
-const confirmDelete = ref(false)
-function askDelete(id: string | null) {
-  deleting.value = id
-  confirmDelete.value = !!id
-}
-const deletingTitle = computed(() => maps.value.find(m => m.id === deleting.value)?.title || '')
 const exporting = ref(false)
 const toast = useToast()
 
@@ -106,8 +98,9 @@ function open(id: string) {
   m.bus.addListener('unselectNodes', () => nextTick(track))
   mind = m
   openedId = id
+  // open at normal size with the main idea in the middle (fit-to-screen makes ideas tiny on a phone)
   nextTick(() => {
-    if (mind === m) m.scaleFit()
+    if (mind === m) m.toCenter()
   })
 }
 
@@ -150,6 +143,13 @@ async function removeIdeas() {
   const nodes = mind.currentNodes.filter(n => n.nodeObj?.id !== mind!.nodeData.id)
   if (nodes.length) await mind.removeNodes(nodes)
 }
+/** The selected idea (or the main one) becomes a new task: the create form opens with its text. */
+const { openCapture } = useSheets()
+function makeTask() {
+  if (!ensureSelection()) return
+  const topic = String(mind!.currentNodes[0]?.nodeObj?.topic || '').trim()
+  if (topic) openCapture('task', null, topic)
+}
 function undo() {
   mind?.undo()
   scheduleSave()
@@ -164,15 +164,21 @@ async function newMap() {
   const map = await create(t('mindmap.newMap'))
   await router.push({ path: '/mindmap', query: { id: map.id } })
 }
-async function deleteMap() {
-  const id = deleting.value
-  deleting.value = null
-  if (!id) return
+/** One tap deletes the map; the toast can bring it back. */
+async function deleteMap(id: string | null) {
+  const map = maps.value.find(m => m.id === id)
+  if (!map) return
+  const copy = structuredClone(toRaw(map))
   if (id === openedId) {
     close()
     await router.replace('/mindmap')
   }
-  await remove(id)
+  await remove(map.id)
+  toast.add({
+    title: t('mindmap.deleted', { title: copy.title }),
+    duration: 6000,
+    actions: [{ label: t('common.undo'), color: 'neutral', variant: 'outline', onClick: () => { requireDb().mindmaps.put(copy) } }]
+  } as any)
 }
 
 // ---------------------------------------------------------------- export
@@ -236,7 +242,7 @@ async function saveFile(file: File) {
 
 const menu = computed(() => [[
   { label: t('mindmap.exportPdf'), icon: 'i-lucide-file-down', onSelect: exportPdf },
-  { label: t('mindmap.deleteMap'), icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => askDelete(openedId) }
+  { label: t('mindmap.deleteMap'), icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => deleteMap(openedId) }
 ]])
 
 // Save before the app goes to the background (a phone may close it there) and when leaving the page.
@@ -253,6 +259,7 @@ const actions = computed(() => [
   { key: 'child', icon: 'i-lucide-git-branch-plus', label: t('mindmap.addChild'), run: addChild, disabled: false },
   { key: 'sibling', icon: 'i-lucide-list-plus', label: t('mindmap.addSibling'), run: addSibling, disabled: false },
   { key: 'edit', icon: 'i-lucide-pencil', label: t('mindmap.edit'), run: edit, disabled: false },
+  { key: 'task', icon: 'i-lucide-square-check-big', label: t('mindmap.makeTask'), run: makeTask, disabled: false },
   { key: 'delete', icon: 'i-lucide-trash-2', label: t('mindmap.delete'), run: removeIdeas, disabled: !selected.value || (rootSelected.value && selected.value === 1) },
   { key: 'undo', icon: 'i-lucide-undo-2', label: t('mindmap.undo'), run: undo, disabled: false }
 ])
@@ -278,12 +285,12 @@ const actions = computed(() => [
 
     <div ref="el" class="map min-h-0 grow" data-testid="mindmap-canvas" />
 
-    <div class="grid grid-cols-5 border-t border-rule bg-white px-1 pb-6" role="toolbar" :aria-label="t('tabs.mindmap')">
+    <div class="grid grid-cols-6 border-t border-rule bg-white px-0.5 pb-6" role="toolbar" :aria-label="t('tabs.mindmap')">
       <button
         v-for="a in actions"
         :key="a.key"
         type="button"
-        class="flex h-[58px] min-w-0 flex-col items-center justify-center gap-0.5 text-[11px] font-medium disabled:opacity-35"
+        class="flex h-[58px] min-w-0 flex-col items-center justify-center gap-0.5 whitespace-nowrap text-[11px] font-medium disabled:opacity-35"
         :class="a.key === 'delete' ? 'text-b1' : 'text-ink'"
         :disabled="a.disabled"
         :data-testid="`mindmap-${a.key}`"
@@ -294,7 +301,6 @@ const actions = computed(() => [
       </button>
     </div>
 
-    <ConfirmModal v-model:open="confirmDelete" :title="t('mindmap.deleteMapTitle')" :body="deletingTitle" :confirm-label="t('mindmap.delete')" danger @confirm="deleteMap" />
     <TabBar />
   </div>
 
@@ -314,7 +320,7 @@ const actions = computed(() => [
             <span class="truncate text-[12px] text-soft">{{ t('mindmap.ideas', { n: countIdeas(m.data?.nodeData) }) }} · {{ fmt.relativeDay(ymd(m.updatedAt)) }}</span>
           </span>
         </NuxtLink>
-        <button type="button" class="tap shrink-0 text-soft" :aria-label="`${m.title}: ${t('mindmap.deleteMap')}`" data-testid="mindmap-row-delete" @click="askDelete(m.id)">
+        <button type="button" class="tap shrink-0 text-soft" :aria-label="`${m.title}: ${t('mindmap.deleteMap')}`" data-testid="mindmap-row-delete" @click="deleteMap(m.id)">
           <UIcon name="i-lucide-trash-2" class="size-[19px]" />
         </button>
       </div>
@@ -325,7 +331,6 @@ const actions = computed(() => [
       <UButton block size="xl" class="h-[52px] whitespace-nowrap rounded-[14px] text-[15px] font-semibold" icon="i-lucide-plus" :label="t('mindmap.newMap')" data-testid="mindmap-new" @click="newMap" />
     </div>
 
-    <ConfirmModal v-model:open="confirmDelete" :title="t('mindmap.deleteMapTitle')" :body="deletingTitle" :confirm-label="t('mindmap.delete')" danger @confirm="deleteMap" />
     <TabBar />
   </div>
 </template>

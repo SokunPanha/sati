@@ -32,8 +32,8 @@ function pick(b: Box) {
         <span class="truncate whitespace-nowrap" data-box-label>{{ t(`boxShort.${b}`) }}</span>
       </button>
     </div>
-    <span class="min-h-[18px] px-1 text-[12px] text-soft" :data-testid="`${testid}-result`" :data-box="model ?? ''">
-      {{ !model ? t('capture.pickBox') : habit ? t('sort.routineHint', { top: topN }) : t(`sort.hint${model}`, { top: topN }) }}
+    <span v-if="model" class="px-1 text-[12px] text-soft" :data-testid="`${testid}-result`" :data-box="model">
+      {{ habit ? t('sort.routineHint', { top: topN }) : t(`sort.hint${model}`, { top: topN }) }}
     </span>
   </div>
 </template>

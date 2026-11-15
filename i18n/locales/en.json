@@ -12,9 +12,9 @@
   "tabs": { "today": "Today", "plan": "Plan", "mindmap": "Mind map", "review": "Tomorrow", "history": "History", "add": "Add", "settings": "Settings" },
   "splash": { "tagline": "Calm mind. One thing at a time.", "loading": "Loading" },
   "repeat": { "label": "Repeat", "never": "Never", "daily": "Daily", "weekdays": "Weekdays", "pick": "Pick days", "weekly": "Weekly", "monthly": "Monthly" },
-  "mindmap": { "title": "Mind map", "new": "New", "newMap": "New mind map", "newIdea": "New idea", "ideas": "{n} ideas", "addChild": "Sub-idea", "addSibling": "Next", "edit": "Edit", "delete": "Delete", "undo": "Undo", "fit": "Fit to screen", "deleteMap": "Delete mind map", "deleteMapTitle": "Delete this mind map?", "more": "More", "exportPdf": "Export PDF", "exportFailed": "Could not export the PDF" },
+  "mindmap": { "deleted": "Deleted “{title}”", "makeTask": "Task", "title": "Mind map", "new": "New", "newMap": "New mind map", "newIdea": "New idea", "ideas": "{n} ideas", "addChild": "Sub-idea", "addSibling": "Next", "edit": "Edit", "delete": "Delete", "undo": "Undo", "fit": "Fit to screen", "deleteMap": "Delete mind map", "deleteMapTitle": "Delete this mind map?", "more": "More", "exportPdf": "Export PDF", "exportFailed": "Could not export the PDF" },
   "focusTime": { "label": "Focus time", "none": "None" },
-  "today": {
+  "today": { "doneToday": "Done today ({n})",
     "title": "Today",
     "sessionsOf": "{done} of {goal} sessions",
     "upNext": "Up next",
@@ -95,7 +95,7 @@
     "endSession": "End session",
     "saved": "Saved to inbox", "sortNow": "Which box?", "pickBox": "Pick a box to save.", "sortLater": "Pick nothing to sort it later from the inbox.", "saveTo": "Save to {name}", "savedTo": "Saved to {name}", "saveHabit": "Save habit", "savedHabit": "Saved to your habits"
   },
-  "plan": {
+  "plan": { "cleared": "Cleared {n} from Drop",
     "subtitle": "All your tasks, by priority",
     "title": "Plan",
     "inbox": "Inbox: {n} to sort",
@@ -121,6 +121,7 @@
     "emptyBody": "Capture tasks and ideas below, then sort them into the four boxes."
   },
   "task": {
+    "addNote": "Note",
     "chipFocus": "Focus", "chipTop": "Top {top}", "chipRemind": "Remind",
     "addTop3": "Add to today's Top {top}",
     "removeTop3": "Remove from Top {top}",
@@ -296,6 +297,12 @@
     "photoError": "Could not read that image."
   },
   "welcome": {
+    "boxesTitle": "Every task goes in one of 4 boxes",
+    "box1": "Has to be done today. Goes into your Top 3 first.",
+    "box2": "Matters, but can wait. Give it a focus session.",
+    "box3": "Small or quick. Do them together in one short block.",
+    "box4": "Not worth your time. Let it go.",
+    "next": "Next",
     "hello": "Welcome to Sati",
     "intro": "A calm place for your work: pick 3 things a day and focus on one at a time.",
     "language": "Language",

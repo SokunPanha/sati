@@ -10,7 +10,7 @@ const fmt = useFmt()
 const { active: profile } = useProfile()
 const { sheets, openTask, openCapture } = useSheets()
 const toast = useToast()
-const { top3, active: planTasks, routines, routinesToday, routineDone, streakOf, setDone, toggleRoutine, loaded } = useTasks()
+const { tasks, top3, active: planTasks, routines, routinesToday, routineDone, streakOf, setDone, toggleRoutine, loaded } = useTasks()
 const { next: nextReminder, todayCount } = useReminders()
 const { focus, remainingMs, start } = useFocus()
 
@@ -42,6 +42,21 @@ function meta(task: Task) {
   if (task.status !== 'done' && task.sessionMin) parts.push(t('common.min', { n: task.sessionMin }))
   if (task.carriedFrom) parts.push(t('today.carried'))
   return parts.join(' · ')
+}
+
+/** Minutes a focus session on this task lasts: its own focus time, or the default from Settings. */
+const { settings } = useSettings()
+const mins = (task: Task) => task.sessionMin || settings.value.focusMin
+
+// Finished today (tasks and habits): a collapsed row at the bottom, tap ✓ to bring one back.
+const showDone = ref(false)
+const doneToday = computed(() => [
+  ...tasks.value.filter(x => x.status === 'done' && !x.isRoutine && x.doneAt && ymd(x.doneAt) === runtime.today).map(task => ({ task, habit: false })),
+  ...routinesToday.value.filter(r => routineDone(r)).map(task => ({ task, habit: true }))
+])
+async function undoDone(task: Task, habit: boolean) {
+  if (habit) await toggleRoutine(task)
+  else await setDone(task, false)
 }
 
 function routineSub(task: Task) {
@@ -138,8 +153,8 @@ async function startFocus(task: Task) {
             <span v-if="meta(upNext)" class="text-[13px] text-soft">{{ meta(upNext) }}</span>
           </button>
         </div>
-        <button v-if="!focus && upNext.sessionMin" type="button" class="mt-3.5 flex h-[50px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-[14px] bg-brand text-[15px] font-semibold text-white shadow-[0_10px_22px_-12px_rgba(15,110,100,0.8)]" data-testid="start-focus" @click="startFocus(upNext)">
-          <UIcon name="i-lucide-play" class="size-[18px]" />{{ t('today.startFocus', { n: upNext.sessionMin }) }}
+        <button v-if="!focus" type="button" class="mt-3.5 flex h-[50px] w-full items-center justify-center gap-2 whitespace-nowrap rounded-[14px] bg-brand text-[15px] font-semibold text-white shadow-[0_10px_22px_-12px_rgba(15,110,100,0.8)]" data-testid="start-focus" @click="startFocus(upNext)">
+          <UIcon name="i-lucide-play" class="size-[18px]" />{{ t('today.startFocus', { n: mins(upNext) }) }}
         </button>
       </div>
 
@@ -154,10 +169,10 @@ async function startFocus(task: Task) {
             </span>
           </button>
           <button
-            v-if="!focus && task.sessionMin"
+            v-if="!focus"
             type="button"
             class="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand"
-            :aria-label="`${task.title}: ${t('today.startFocus', { n: task.sessionMin })}`"
+            :aria-label="`${task.title}: ${t('today.startFocus', { n: mins(task) })}`"
             data-testid="row-focus"
             @click="startFocus(task)"
           >
@@ -196,10 +211,10 @@ async function startFocus(task: Task) {
               </span>
             </button>
             <button
-              v-if="!focus && r.sessionMin"
+              v-if="!focus"
               type="button"
               class="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand"
-              :aria-label="`${r.title}: ${t('today.startFocus', { n: r.sessionMin })}`"
+              :aria-label="`${r.title}: ${t('today.startFocus', { n: mins(r) })}`"
               data-testid="routine-focus"
               @click="startFocus(r)"
             >
@@ -210,6 +225,21 @@ async function startFocus(task: Task) {
         <p v-else class="m-0 flex items-center gap-2.5 rounded-[18px] bg-brand-tint p-4 text-[15px] font-semibold text-brand-dark" data-testid="routines-done">
           <UIcon name="i-lucide-circle-check" class="size-5 shrink-0" />{{ t('today.routinesDone') }}
         </p>
+      </template>
+
+      <!-- Done today -->
+      <template v-if="doneToday.length">
+        <button type="button" class="flex min-h-[44px] items-center gap-1.5 px-1 pt-3 text-left text-[15px] font-semibold" :aria-expanded="showDone" data-testid="done-toggle" @click="showDone = !showDone">
+          <UIcon name="i-lucide-circle-check" class="size-4 text-brand" /><span class="grow">{{ t('today.doneToday', { n: doneToday.length }) }}</span>
+          <UIcon name="i-lucide-chevron-down" class="size-[18px] shrink-0 text-soft transition-transform" :class="showDone ? '' : '-rotate-90'" />
+        </button>
+        <div v-if="showDone" class="card flex flex-col overflow-hidden !rounded-[18px]">
+          <div v-for="d in doneToday" :key="d.task.id" class="flex min-h-[52px] items-center gap-3 border-b border-rule2 px-4 py-2 last:border-b-0" data-testid="done-row">
+            <CheckCircle :checked="true" :label="`${d.task.title}: ${t('common.undo')}`" @toggle="undoDone(d.task, d.habit)" />
+            <span class="min-w-0 grow truncate text-[15px] text-soft line-through">{{ d.task.title }}</span>
+            <UIcon v-if="d.habit" name="i-lucide-repeat" class="size-4 shrink-0 text-soft" />
+          </div>
+        </div>
       </template>
     </section>
 

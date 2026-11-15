@@ -32,7 +32,17 @@ function toggleSection(k: Box | 'routines') {
   collapsed.value = isCollapsed(k) ? collapsed.value.filter(x => x !== k) : [...collapsed.value, k]
   writeStore(COLLAPSED_KEY, collapsed.value)
 }
-const clearOpen = ref(false)
+/** Clear the Drop box in one tap; the toast can bring the tasks back. */
+async function clearDrop() {
+  const rows = byBox(4).map(x => toRaw(x))
+  if (!rows.length) return
+  await clearBox(4)
+  toast.add({
+    title: t('plan.cleared', { n: rows.length }),
+    duration: 6000,
+    actions: [{ label: t('common.undo'), color: 'neutral', variant: 'outline', onClick: () => { requireDb().tasks.bulkPut(rows) } }]
+  } as any)
+}
 
 function sub(task: Task) {
   return task.sessionMin ? t('common.min', { n: task.sessionMin }) : ''
@@ -79,7 +89,7 @@ const cells: Box[] = [1, 2, 3, 4]
             <UIcon name="i-lucide-chevron-down" class="size-[18px] shrink-0 text-soft transition-transform" :class="isCollapsed(b) ? '-rotate-90' : ''" />
           </button>
         </h2>
-        <button v-if="b === 4 && byBox(4).length && !isCollapsed(4)" type="button" class="-mt-1 flex min-h-[40px] items-center gap-1.5 self-end whitespace-nowrap px-1 text-[13px] font-semibold text-b1-tx" data-testid="clear-all" @click="clearOpen = true">
+        <button v-if="b === 4 && byBox(4).length && !isCollapsed(4)" type="button" class="-mt-1 flex min-h-[40px] items-center gap-1.5 self-end whitespace-nowrap px-1 text-[13px] font-semibold text-b1-tx" data-testid="clear-all" @click="clearDrop">
           <UIcon name="i-lucide-trash-2" class="size-4" />{{ t('plan.clearAll') }}
         </button>
         <div v-if="byBox(b).length && !isCollapsed(b)" class="card flex flex-col overflow-hidden">
@@ -126,7 +136,6 @@ const cells: Box[] = [1, 2, 3, 4]
       </div>
     </section>
 
-    <ConfirmModal v-model:open="clearOpen" :title="t('plan.clearTitle')" :body="t('plan.clearBody', { n: byBox(4).length })" :confirm-label="t('plan.clearAll')" danger @confirm="clearBox(4)" />
     <TabBar />
   </div>
 </template>

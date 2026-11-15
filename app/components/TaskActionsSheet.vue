@@ -6,6 +6,7 @@ const toast = useToast()
 const { sheets, openSort } = useSheets()
 const { tasks, addToTop3, removeFromTop3, setDone, remove } = useTasks()
 const { start } = useFocus()
+const { settings } = useSettings()
 
 const task = computed(() => tasks.value.find(x => x.id === sheets.taskId) || null)
 const inTop3 = computed(() => task.value?.top3Date === runtime.today)
@@ -47,11 +48,17 @@ function edit() {
   close()
   if (id) setTimeout(() => openSort(id), 250)
 }
+/** One tap deletes; the toast can bring it back. */
 async function del() {
   if (!task.value) return
-  await remove(task.value.id)
-  toast.add({ title: t('task.deleted') })
+  const copy = toRaw(task.value)
+  await remove(copy.id)
   close()
+  toast.add({
+    title: t('task.deleted'),
+    duration: 5000,
+    actions: [{ label: t('common.undo'), color: 'neutral', variant: 'outline', onClick: () => { requireDb().tasks.put(copy) } }]
+  } as any)
 }
 const row = 'flex min-h-[52px] w-full items-center gap-3 border-b border-rule2 px-4 text-left text-[15px] text-ink last:border-b-0'
 </script>
@@ -65,8 +72,8 @@ const row = 'flex min-h-[52px] w-full items-center gap-3 border-b border-rule2 p
           <UIcon :name="inTop3 ? 'i-lucide-star-off' : 'i-lucide-star'" class="size-5 text-brand" />
           {{ inTop3 ? t('task.removeTop3', { top: topN }) : t('task.addTop3', { top: topN }) }}
         </button>
-        <button v-if="task.sessionMin" type="button" :class="row" data-testid="action-focus" @click="focusNow">
-          <UIcon name="i-lucide-play" class="size-5 text-brand" />{{ t('task.startFocus', { n: task.sessionMin }) }}
+        <button type="button" :class="row" data-testid="action-focus" @click="focusNow">
+          <UIcon name="i-lucide-play" class="size-5 text-brand" />{{ t('task.startFocus', { n: task.sessionMin || settings.focusMin }) }}
         </button>
         <button v-if="!task.isRoutine" type="button" :class="row" @click="done">
           <UIcon name="i-lucide-circle-check" class="size-5 text-brand" />{{ t('task.markDone') }}

@@ -29,10 +29,21 @@ function toggleFocus() {
   sessionMin.value = sessionMin.value ? 0 : (settings.value.focusMin || 25)
 }
 
+/** The note field stays hidden behind "+ Note" until it is wanted (or the task already has one). */
+const noteOpen = ref(false)
+const showNote = computed(() => noteOpen.value || !!description.value)
+const noteEl = ref<{ textareaRef?: HTMLTextAreaElement } | null>(null)
+function openNote() {
+  noteOpen.value = true
+  nextTick(() => noteEl.value?.textareaRef?.focus())
+}
+
 /** Ticking "Add to Top" with no box chosen selects Do now, so the tiles show where it goes. */
 function toggleTop() {
-  addTop.value = !addTop.value
-  if (addTop.value && !box.value) box.value = 1
+  // read the new value first: a v-model value only updates after the parent re-renders
+  const on = !addTop.value
+  addTop.value = on
+  if (on && !box.value) box.value = 1
 }
 
 const chips = computed(() => [
@@ -56,7 +67,12 @@ const chips = computed(() => [
     :data-testid="testid === 'capture' ? 'capture-text' : id('title')"
     @keydown.enter.exact.prevent="emit('submit')"
   />
+  <button v-if="!showNote" type="button" class="-mt-1.5 flex min-h-[36px] items-center gap-1 self-start px-1 text-[14px] font-medium text-brand" :data-testid="id('add-note')" @click="openNote">
+    <UIcon name="i-lucide-plus" class="size-4" />{{ t('task.addNote') }}
+  </button>
   <UTextarea
+    v-else
+    ref="noteEl"
     v-model="description"
     :rows="2"
     autoresize

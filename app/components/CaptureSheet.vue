@@ -16,7 +16,9 @@ const inFocus = computed(() => focus.value?.phase === 'focus')
 const editingReminder = computed(() => !!sheets.reminderId)
 
 watch(() => sheets.capture, (open) => {
-  if (open) reset(sheets.captureMode === 'reminder')
+  if (!open) return
+  reset(sheets.captureMode === 'reminder')
+  if (sheets.captureTitle) form.title = sheets.captureTitle
 })
 
 /** Create the task and apply the form. Returns false if the Top list was full. */

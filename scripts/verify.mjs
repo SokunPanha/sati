@@ -118,9 +118,14 @@ await step('welcome: language picker en ↔ km', async () => {
   await tid('lang-km').click()
   await page.waitForFunction(() => document.querySelector('h1')?.textContent?.includes('សូមស្វាគមន៍'))
 })
-await step('welcome: create first profile → notification explainer → Today', async () => {
+await step('welcome: create first profile → the 4 boxes → notification explainer → Today', async () => {
   await tid('welcome-name').fill('ដារ៉ា')
   await tid('welcome-create').click()
+  await tid('welcome-boxes').waitFor()
+  await settle(700)
+  await shot('02a-welcome-boxes')
+  if (await tid('welcome-boxes').locator('> div').count() !== 4) throw new Error('expected 4 boxes')
+  await tid('welcome-boxes-next').click()
   await tid('perm-status').waitFor()
   await shot('02-welcome-notifications')
   await tid('welcome-skip').click()
@@ -129,56 +134,49 @@ await step('welcome: create first profile → notification explainer → Today',
   await shot('03-today-empty-km')
 })
 
-const capture = async (text) => {
+/** New task through the one form. A box is required; `daily` makes it a habit. */
+const capture = async (text, box = 2, { daily = false } = {}) => {
   await tid('capture-bar').click()
   await tid('capture-text').waitFor()
   await settle()
   await tid('capture-text').fill(text)
+  await tid(`capture-box-${box}`).click()
+  if (daily) await page.locator('[role="dialog"] button[aria-pressed]', { hasText: 'រាល់ថ្ងៃ' }).click()
   await tid('capture-save').click()
   await tid('capture-text').waitFor({ state: 'detached' })
   await settle(300)
 }
-await step('capture 4 tasks into the inbox', async () => {
-  await capture('កែវីដេអូបង្រៀន k3s deploy')
-  await capture('សរសេរស្គ្រីបវីដេអូបន្ទាប់')
-  await capture('រៀនភាសាអង់គ្លេស')
-  await capture('ឆ្លើយមតិយោបល់')
-  await tid('sort-inbox').waitFor()
-  return (await tid('sort-inbox').innerText()).includes('4')
+await step('a box is required: Save stays off until one is picked', async () => {
+  await tid('capture-bar').click()
+  await tid('capture-text').waitFor()
+  await settle()
+  await tid('capture-text').fill('គ្មានប្រអប់')
+  const off = await tid('capture-save').isDisabled()
+  await tid('capture-text').press('Enter')
+  await settle(300)
+  const stillOpen = await tid('capture-text').count()
+  await tid('capture-box-1').click()
+  const on = !(await tid('capture-save').isDisabled())
+  await page.keyboard.press('Escape')
+  await tid('capture-text').waitFor({ state: 'detached' })
+  return off && stillOpen === 1 && on ? 'disabled → enabled after picking a box' : false
 })
 
-await step('sort the inbox (box 1, box 2, daily routine, box 3)', async () => {
+await step('create 4 tasks, each with its box (Do now, Schedule, daily habit, Limit)', async () => {
+  await capture('កែវីដេអូបង្រៀន k3s deploy', 1)
+  await capture('សរសេរស្គ្រីបវីដេអូបន្ទាប់', 2)
+  await capture('រៀនភាសាអង់គ្លេស', 2, { daily: true })
+  await capture('ឆ្លើយមតិយោបល់', 3)
   await page.goto(BASE + '/plan')
-  await tid('inbox-bar').click()
-  await tid('sort-sheet').waitFor()
-  await settle()
-  // 1: Do now, area Dev Hub
-  await tid('sort-box-1').click()
-  await tid('sort-area').click()
-  await tid('area-Dev Hub').click()
-  if (await tid('sort-result').getAttribute('data-box') !== '1') throw new Error('expected box 1')
-  await shot('04-sort-sheet-km')
-  await tid('sort-save').click()
-  // 2: Schedule → box 2
-  await page.waitForFunction(() => document.querySelector('[data-testid="sort-title"]')?.value?.includes('ស្គ្រីប'))
-  await tid('sort-box-2').click()
-  if (await tid('sort-result').getAttribute('data-box') !== '2') throw new Error('expected box 2')
-  await tid('sort-save').click()
-  // 3: Schedule + daily → routine (habit)
-  await page.waitForFunction(() => document.querySelector('[data-testid="sort-title"]')?.value?.includes('អង់គ្លេស'))
-  await tid('sort-box-2').click()
-  await page.locator('[data-testid="sort-sheet"] button[aria-pressed]', { hasText: 'រាល់ថ្ងៃ' }).click()
-  await tid('sort-save').click()
-  // 4: Limit → box 3
-  await page.waitForFunction(() => document.querySelector('[data-testid="sort-title"]')?.value?.includes('មតិ'))
-  await tid('sort-box-3').click()
-  await tid('sort-save').click()
-  await tid('sort-sheet').waitFor({ state: 'detached' })
+  await tid('page-plan').waitFor()
+  await settle(500)
+  await shot('04-plan-boxes-km')
   const b1 = await page.locator('[data-testid="box-1"] [data-testid="matrix-task"]').count()
   const b2 = await page.locator('[data-testid="box-2"] [data-testid="matrix-task"]').count()
   const b3 = await page.locator('[data-testid="box-3"] [data-testid="matrix-task"]').count()
   const routines = await page.locator('[data-testid="routine-row"]').count()
-  return b1 === 1 && b2 === 1 && b3 === 1 && routines === 1 ? `box1=${b1} box2=${b2} box3=${b3} routines=${routines}` : false
+  const noBox = await tid('no-box').count()
+  return b1 === 1 && b2 === 1 && b3 === 1 && routines === 1 && !noBox ? `box1=${b1} box2=${b2} box3=${b3} routines=${routines}` : false
 })
 
 await step('add tasks to Top 3 from Plan', async () => {
@@ -225,6 +223,7 @@ await step('start focus: countdown runs, pause/resume, capture during focus', as
   await settle()
   await shot('08-capture-during-focus-km')
   await tid('capture-text').fill('សាកពុម្ពអក្សរថ្មីសម្រាប់ thumbnail')
+  await tid('capture-box-2').click()
   await tid('capture-save').click()
   await tid('capture-text').waitFor({ state: 'detached' })
   return `${a} → ${b}`
@@ -246,8 +245,14 @@ await step('focus completes → session logged, in-app notification, break offer
   await tid('focus-back').click()
   await tid('page-today').waitFor()
   await tid('unread-dot').waitFor()
-  const sessions = await page.evaluate(() => document.querySelector('[data-testid="page-today"]').innerText)
-  return /1 នៃ 4 វគ្គ/.test(sessions) ? 'Today shows "1 នៃ 4 វគ្គ"' : false
+  const sessions = await page.evaluate(async () => {
+    const name = (await indexedDB.databases()).map(d => d.name).find(n => n?.startsWith('sati-p-'))
+    const db = await new Promise(r => { const q = indexedDB.open(name); q.onsuccess = () => r(q.result) })
+    const n = await new Promise(r => { const q = db.transaction('sessions').objectStore('sessions').count(); q.onsuccess = () => r(q.result) })
+    db.close()
+    return n
+  })
+  return sessions === 1 ? '1 session logged, unread notification shown' : `sessions=${sessions}`
 })
 
 await step('End on the focus page asks to confirm (minutes left), then ends the session — no create form', async () => {
@@ -335,7 +340,7 @@ await step('Settings: switch language to English and back to Khmer', async () =>
   await tid('page-today').waitFor()
   await settle(700)
   await shot('16-today-en')
-  const en = (await page.locator('h1').first().innerText()) === 'Today'
+  const en = (await tid('tab-today').getAttribute('aria-label')) === 'Today'
   await page.goto(BASE + '/settings')
   await tid('set-language-km').click()
   await page.waitForFunction(() => document.documentElement.lang === 'km')
@@ -432,7 +437,7 @@ const inboxCount = async () => {
   await page.goto(BASE + '/plan')
   await tid('page-plan').waitFor()
   await settle(500)
-  return (await tid('inbox-bar').count()) ? Number((await tid('inbox-bar').innerText()).match(/\d+/)?.[0] || 0) : 0
+  return await tid('no-box-row').count()
 }
 const openCapture = async (text) => {
   await tid('capture-bar').click()
@@ -441,7 +446,7 @@ const openCapture = async (text) => {
   await tid('capture-text').fill(text)
 }
 
-await step('one form: picking box 1 (Do now) saves straight into box 1 (skips the inbox)', async () => {
+await step('one form: picking box 1 (Do now) saves straight into box 1', async () => {
   const before = await inboxCount()
   await openCapture('ជួសជុល server')
   await tid('capture-box-1').click()
@@ -451,12 +456,13 @@ await step('one form: picking box 1 (Do now) saves straight into box 1 (skips th
   const after = await inboxCount()
   const inBox1 = await page.locator('[data-testid="box-1"] [data-testid="matrix-task"]', { hasText: 'ជួសជុល server' }).count()
   if (inBox1 !== 1 || after !== before) throw new Error(`box1=${inBox1}, inbox ${before} → ${after}`)
-  return `in box 1, inbox unchanged (${before})`
+  return 'in box 1'
 })
 
 await step('one form: Repeat = every day saves a habit (shown in routines on Plan and Today)', async () => {
   const before = await inboxCount()
   await openCapture('ហាត់ប្រាណ ៣០ នាទី')
+  await tid('capture-box-2').click()
   await page.locator('[data-testid="capture-text"]').locator('xpath=ancestor::*[@role="dialog"][1]').locator('button[aria-pressed]', { hasText: 'រាល់ថ្ងៃ' }).click()
   await tid('capture-save').click()
   await tid('capture-text').waitFor({ state: 'detached' })
@@ -467,13 +473,15 @@ await step('one form: Repeat = every day saves a habit (shown in routines on Pla
   await settle(500)
   const onToday = await page.locator('[data-testid="routine-tile"]', { hasText: 'ហាត់' }).count()
   if (onPlan !== 1 || onToday !== 1 || after !== before) throw new Error(`plan=${onPlan} today=${onToday} inbox ${before} → ${after}`)
-  return 'habit listed on Plan and Today, inbox unchanged'
+  return 'habit listed on Plan and Today'
 })
 
 await step('task description: saved from the capture sheet, shown on the task, editable in the sort sheet', async () => {
   await page.goto(BASE + '/plan')
   await tid('page-plan').waitFor()
   await openCapture('ថតវីដេអូ Docker')
+  if (await tid('capture-description').count()) throw new Error('note field should be hidden until "+ Note"')
+  await tid('capture-add-note').click()
   await tid('capture-description').fill('ជំពូក ១–៣\nប្រើ k3s')
   await tid('capture-box-2').click()
   await tid('capture-save').click()
@@ -682,12 +690,13 @@ await step('service worker registers and controls the page; manifest link + appl
 await step('permission granted → test button shows a real system notification (vibrate, icon, badge, data.url)', async () => {
   await t2('welcome-name').fill('PWA')
   await t2('welcome-create').click()
+  await t2('welcome-boxes-next').click()
   await t2('welcome-skip').click()
   await t2('page-today').waitFor()
   await p2.goto(BASE + '/settings')
   await t2('test-notification').click()
   const n = await pollPage(p2, async () => {
-    const [x] = await (await navigator.serviceWorker.ready).getNotifications()
+    const x = (await (await navigator.serviceWorker.ready).getNotifications()).find(n => n.tag === 'sati-test')
     return x ? { title: x.title, body: x.body, icon: x.icon, badge: x.badge, tag: x.tag, silent: x.silent, vibrate: x.vibrate, data: x.data, perm: Notification.permission } : null
   }, 8000)
   if (!(n?.perm === 'granted' && n.data?.url === '/notifications' && /pwa-192/.test(n.icon) && n.silent === false)) throw new Error(JSON.stringify(n))
@@ -700,6 +709,7 @@ await step('due reminder → system notification with requireInteraction via the
   await t2('capture-text').waitFor()
   await p2.waitForTimeout(500)
   await t2('capture-text').fill('Call mom')
+  await t2('capture-box-2').click()
   await t2('reminder-tomorrow').click()
   await t2('capture-save').click()
   await t2('reminder-row').waitFor()

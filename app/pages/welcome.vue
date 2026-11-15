@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// First run: language (Khmer first), name → first profile, then the notification explainer.
+// First run: language (Khmer first), name → first profile, the 4 boxes (shown once), then the notification explainer.
 // Dark hero continues the splash screen; the form sits on a cream sheet that rises from the bottom.
 const { t, locale, setLocale } = useI18n()
 const route = useRoute()
@@ -8,7 +8,7 @@ const notify = useNotify()
 
 const name = ref('')
 const busy = ref(false)
-const step = computed(() => route.query.step === 'notify' && active.value ? 'notify' : 'profile')
+const step = computed(() => active.value && (route.query.step === 'notify' || route.query.step === 'boxes') ? route.query.step : 'profile')
 const langs = [{ code: 'km' as const, label: 'ខ្មែរ' }, { code: 'en' as const, label: 'English' }]
 const chips = [
   { key: 'top3', icon: 'i-lucide-star' },
@@ -22,11 +22,15 @@ async function createFirst() {
   busy.value = true
   try {
     await create({ name: name.value, color: PROFILE_COLORS[0]!, locale: locale.value as 'km' | 'en' })
-    await navigateTo({ path: '/welcome', query: { step: 'notify' } }, { replace: true })
+    await navigateTo({ path: '/welcome', query: { step: 'boxes' } }, { replace: true })
   }
   finally {
     busy.value = false
   }
+}
+
+function toNotify() {
+  return navigateTo({ path: '/welcome', query: { step: 'notify' } }, { replace: true })
 }
 
 async function done() {
@@ -80,6 +84,11 @@ async function allow() {
         </div>
       </template>
 
+      <div v-else-if="step === 'boxes'" class="relative flex flex-col items-center gap-4 text-center">
+        <span class="rise flex size-[76px] items-center justify-center rounded-[22px] bg-night2 text-mint ring-1 ring-nightline"><UIcon name="i-lucide-layout-grid" class="size-9" /></span>
+        <h1 class="rise display m-0 text-[28px] font-bold" style="animation-delay: 80ms">{{ t('welcome.boxesTitle') }}</h1>
+      </div>
+
       <div v-else class="relative flex flex-col items-center gap-4 text-center">
         <span class="rise relative flex size-[92px] items-center justify-center">
           <span class="pulse absolute inset-0 rounded-full bg-accent/25" />
@@ -126,6 +135,16 @@ async function allow() {
         <p class="m-0 mt-auto flex items-center justify-center gap-2 text-center text-[13px] text-soft">
           <UIcon name="i-lucide-lock" class="size-4 shrink-0 text-brand" />{{ t('welcome.privacy') }}
         </p>
+      </template>
+
+      <template v-else-if="step === 'boxes'">
+        <div class="card flex flex-col overflow-hidden !rounded-[20px]" data-testid="welcome-boxes">
+          <div v-for="b in BOXES" :key="b" class="flex flex-col gap-1.5 border-b border-rule2 px-4 py-3.5 last:border-b-0">
+            <BoxBadge :box="b" class="self-start" />
+            <span class="text-[14px] text-ink">{{ t(`welcome.box${b}`, { top: 3 }) }}</span>
+          </div>
+        </div>
+        <UButton block size="xl" trailing-icon="i-lucide-arrow-right" class="mt-auto h-14 whitespace-nowrap rounded-2xl text-[16px] font-semibold" :label="t('welcome.next')" data-testid="welcome-boxes-next" @click="toNotify" />
       </template>
 
       <template v-else>
