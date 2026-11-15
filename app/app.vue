@@ -47,6 +47,13 @@ function onSwMessage(e: MessageEvent) {
 onMounted(async () => {
   window.addEventListener('pointerdown', notify.unlockAudio, { passive: true })
   navigator.serviceWorker?.addEventListener('message', onSwMessage)
+  // Phones pause timers while the installed app is in the background, so the hourly update check rarely runs:
+  // also look for a new version each time the app comes back to the front. Only the service worker and its
+  // file caches are replaced; tasks live in IndexedDB, which an update never touches.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && navigator.onLine)
+      navigator.serviceWorker?.getRegistration().then(r => r?.update()).catch(() => {})
+  })
   window.addEventListener('message', (e) => {
     if (e.origin === location.origin) onSwMessage(e)
   })

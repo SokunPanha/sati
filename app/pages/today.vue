@@ -10,7 +10,7 @@ const fmt = useFmt()
 const { active: profile } = useProfile()
 const { sheets, openSort, openTask, openCapture } = useSheets()
 const toast = useToast()
-const { top3, inbox, active: planTasks, routinesToday, routineDone, streakOf, setDone, toggleRoutine, loaded } = useTasks()
+const { top3, inbox, active: planTasks, routines, routinesToday, routineDone, streakOf, setDone, toggleRoutine, loaded } = useTasks()
 const { next: nextReminder, todayCount } = useReminders()
 const { focus, remainingMs, start } = useFocus()
 
@@ -20,8 +20,12 @@ const upNext = computed(() => top3.value.find(x => x.status !== 'done') || null)
 const doneCount = computed(() => top3.value.filter(x => x.status === 'done').length)
 const allDone = computed(() => top3.value.length > 0 && doneCount.value === top3.value.length)
 const openTop = computed(() => top3.value.filter(x => x.status !== 'done'))
-const openRoutines = computed(() => routinesToday.value.filter(r => !routineDone(r)))
-const routinesDone = computed(() => routinesToday.value.length - openRoutines.value.length)
+// Every active habit is listed: the ones due today first, then the others (e.g. a weekday habit on Sunday).
+const dueIds = computed(() => new Set(routinesToday.value.map(r => r.id)))
+const openRoutines = computed(() => routines.value
+  .filter(r => !routineDone(r))
+  .sort((a, b) => Number(dueIds.value.has(b.id)) - Number(dueIds.value.has(a.id))))
+const routinesDone = computed(() => routinesToday.value.filter(r => routineDone(r)).length)
 const focusOnBreak = computed(() => focus.value?.phase === 'break' || focus.value?.phase === 'break-done')
 
 const rest = computed(() => openTop.value.slice(1))
@@ -42,7 +46,7 @@ function meta(task: Task) {
 
 function routineSub(task: Task) {
   const n = streakOf(task)
-  return n > 0 ? t('today.streak', { n }) : fmt.repeatLabel(task.repeat)
+  return n > 0 && dueIds.value.has(task.id) ? t('today.streak', { n }) : fmt.repeatLabel(task.repeat)
 }
 
 /** Tick: finish it, it leaves the list, and the toast can bring it back. */
@@ -178,18 +182,18 @@ async function startFocus(task: Task) {
       </div>
 
       <!-- Habits -->
-      <template v-if="routinesToday.length">
+      <template v-if="routines.length">
         <div class="flex items-baseline justify-between px-1 pt-3">
           <h2 class="m-0 flex items-center gap-1.5 text-[15px] font-semibold"><UIcon name="i-lucide-repeat" class="size-4 text-brand" />{{ t('today.routine') }}</h2>
-          <span class="text-[13px] text-soft">{{ t('today.routineOf', { done: routinesDone, total: routinesToday.length }) }}</span>
+          <span v-if="routinesToday.length" class="text-[13px] text-soft">{{ t('today.routineOf', { done: routinesDone, total: routinesToday.length }) }}</span>
         </div>
         <div v-if="openRoutines.length" class="card flex flex-col overflow-hidden !rounded-[18px]">
           <div v-for="r in openRoutines" :key="r.id" class="flex min-h-[60px] items-center gap-3 border-b border-rule2 px-4 py-2 last:border-b-0" data-testid="routine-tile">
             <CheckCircle :checked="false" :label="`${r.title}: ${t('today.markDone')}`" data-testid="routine-check" @toggle="complete(r, true)" />
             <button type="button" class="flex min-w-0 grow flex-col gap-0.5 text-left" @click="openTask(r.id)">
               <span class="truncate text-[15px] font-medium text-ink">{{ r.title }}</span>
-              <span class="flex items-center gap-1 truncate text-[12px]" :class="streakOf(r) > 0 ? 'font-medium text-b1' : 'text-soft'">
-                <UIcon v-if="streakOf(r) > 0" name="i-lucide-flame" class="size-3.5 shrink-0" />{{ routineSub(r) }}
+              <span class="flex items-center gap-1 truncate text-[12px]" :class="streakOf(r) > 0 && dueIds.has(r.id) ? 'font-medium text-b1' : 'text-soft'">
+                <UIcon v-if="streakOf(r) > 0 && dueIds.has(r.id)" name="i-lucide-flame" class="size-3.5 shrink-0" />{{ routineSub(r) }}
               </span>
             </button>
             <button
