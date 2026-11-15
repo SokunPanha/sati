@@ -1,10 +1,24 @@
 // Sati (សតិ) — personal focus & task PWA. Static SPA, all data in IndexedDB.
+import { execSync } from 'node:child_process'
+
+/** Short commit of this build (Vercel sets VERCEL_GIT_COMMIT_SHA; local builds ask git). Shown in Settings. */
+function buildSha() {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)
+  try {
+    return execSync('git rev-parse --short=7 HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+  }
+  catch {
+    return ''
+  }
+}
 const FONT_URL
   = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Kantumruy+Pro:wght@400;500;600;700&display=swap'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-01',
   ssr: false,
+  // Which build is running (Settings → App): set once at build time.
+  runtimeConfig: { public: { buildTime: new Date().toISOString(), buildSha: buildSha() } },
   devtools: { enabled: false },
   telemetry: false,
 

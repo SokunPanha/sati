@@ -85,6 +85,43 @@ async function download() {
   downloadText(`sati-backup-${stamp}.json`, JSON.stringify(data))
   toast.add({ title: t('settings.backupSaved'), color: 'success', icon: 'i-lucide-download' })
 }
+// ---------------------------------------------------------------- app version / update
+const rc = useRuntimeConfig()
+const builtAt = Date.parse(String(rc.public.buildTime || '')) || 0
+/** "1ac258d · 15 Nov 12:52": the commit first, so it's still readable if a narrow screen cuts the end */
+const version = computed(() => [rc.public.buildSha, builtAt ? `${fmt.date(ymd(builtAt), { day: 'numeric', month: 'short' })} ${fmt.time(builtAt)}` : ''].filter(Boolean).join(' · '))
+const checking = ref(false)
+
+/** Ask the server for its newest build (past the offline cache). Same build: say so. Newer: install it and reload. */
+async function checkUpdate() {
+  if (checking.value) return
+  if (!navigator.onLine) {
+    toast.add({ title: t('settings.updateOffline'), color: 'warning' })
+    return
+  }
+  checking.value = true
+  try {
+    const res = await fetch(`/_nuxt/builds/latest.json?t=${Date.now()}`, { cache: 'no-store' })
+    const latest = (await res.json())?.id
+    if (latest && latest === rc.app.buildId) {
+      toast.add({ title: t('settings.upToDate'), color: 'success', icon: 'i-lucide-circle-check' })
+      return
+    }
+    toast.add({ title: t('settings.updating'), icon: 'i-lucide-refresh-cw' })
+    const reg = await navigator.serviceWorker?.getRegistration()
+    await reg?.update()
+    reg?.waiting?.postMessage({ type: 'SKIP_WAITING' })
+    // the new service worker reloads the app when it takes over; reload anyway if that hasn't happened
+    setTimeout(() => location.reload(), reg ? 8000 : 300)
+  }
+  catch {
+    toast.add({ title: t('settings.updateFailed'), color: 'error' })
+  }
+  finally {
+    checking.value = false
+  }
+}
+
 const restoreInput = ref<HTMLInputElement | null>(null)
 const pending = shallowRef<BackupFile | null>(null)
 const restoreOpen = ref(false)
@@ -259,6 +296,14 @@ const langOptions = [{ value: 'km' as const, label: 'ខ្មែរ' }, { value
         <SettingRow icon="i-lucide-calendar-sync" tone="violet" :label="t('settings.backupReminder')" :sub="t('settings.backupReminderSub')">
           <USwitch :model-value="settings.notif.backup" size="lg" :aria-label="t('settings.backupReminder')" @update:model-value="setNotif({ backup: $event })" />
         </SettingRow>
+      </div>
+    </section>
+
+    <!-- App -->
+    <section class="flex flex-col gap-2">
+      <h2 class="section-label caps">{{ t('settings.app') }}</h2>
+      <div class="card flex flex-col overflow-hidden !rounded-[20px]">
+        <SettingRow :icon="checking ? 'i-lucide-loader-circle' : 'i-lucide-refresh-cw'" tone="ink" :label="t('settings.checkUpdate')" :sub="checking ? t('settings.checking') : version" button data-testid="check-update" @click="checkUpdate()" />
       </div>
     </section>
 

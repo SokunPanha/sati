@@ -323,6 +323,7 @@
     "notInstalled": "Not installed yet: running in the browser."
   },
   "settings": {
+    "app": "App", "checkUpdate": "Check for update", "checking": "Checking…", "upToDate": "You have the latest version", "updating": "Updating… the app will reload", "updateOffline": "You're offline. Connect and try again.", "updateFailed": "Couldn't check right now. Try again.",
     "title": "Profile & settings",
     "tapPhoto": "Tap photo to change",
     "changePhoto": "Change profile photo",
