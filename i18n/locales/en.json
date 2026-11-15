@@ -8,6 +8,7 @@
   },
   "dur": { "h": "{n}h", "m": "{n}m" },
   "box": { "1": "Do now", "2": "Schedule", "3": "Limit", "4": "Drop", "n": "Box {n}", "pick": "Which box?" },
+  "boxShort": { "1": "Do now", "2": "Schedule", "3": "Limit", "4": "Drop" },
   "tabs": { "today": "Today", "plan": "Plan", "mindmap": "Mind map", "review": "Tomorrow", "history": "History", "add": "Add", "settings": "Settings" },
   "splash": { "tagline": "Calm mind. One thing at a time.", "loading": "Loading" },
   "repeat": { "label": "Repeat", "never": "Never", "daily": "Daily", "weekdays": "Weekdays", "pick": "Pick days", "weekly": "Weekly", "monthly": "Monthly" },
@@ -120,6 +121,7 @@
     "emptyBody": "Capture tasks and ideas below, then sort them into the four boxes."
   },
   "task": {
+    "chipFocus": "Focus", "chipTop": "Top {top}", "chipRemind": "Remind",
     "addTop3": "Add to today's Top {top}",
     "removeTop3": "Remove from Top {top}",
     "top3Full": "Top {top} is full (max {top} a day)",

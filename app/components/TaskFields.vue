@@ -2,7 +2,7 @@
 import type { Box, Repeat } from '~/types'
 
 // The task form. Create (CaptureSheet) and Edit (SortSheet) both use it, so the two always look and work the same:
-// title, description, box, Repeat (habit), "Focus time" (off by default), "Add to Top" and "Remind me".
+// title, description, box, then one row of switches (Focus time, Add to Top, Remind me) and Repeat (habit) last.
 const props = withDefaults(defineProps<{ testid?: string, autofocus?: boolean }>(), { testid: 'capture', autofocus: false })
 const emit = defineEmits<{ submit: [] }>()
 const title = defineModel<string>('title', { required: true })
@@ -34,6 +34,12 @@ function toggleTop() {
   addTop.value = !addTop.value
   if (addTop.value && !box.value) box.value = 1
 }
+
+const chips = computed(() => [
+  { key: 'focus', icon: 'i-lucide-timer', label: t('task.chipFocus'), aria: t('focusTime.label'), on: !!sessionMin.value, border: 'border-brand', fill: 'bg-brand', toggle: toggleFocus },
+  ...(isHabit.value ? [] : [{ key: 'top', icon: 'i-lucide-star', label: t('task.chipTop', { top: topN.value }), aria: t('task.addTop3', { top: topN.value }), on: addTop.value, border: 'border-brand', fill: 'bg-brand', toggle: toggleTop }]),
+  { key: 'remind', icon: 'i-lucide-alarm-clock', label: t('task.chipRemind'), aria: t('capture.remind'), on: remind.value, border: 'border-rem', fill: 'bg-rem', toggle: () => { remind.value = !remind.value } }
+])
 </script>
 
 <template>
@@ -66,56 +72,31 @@ function toggleTop() {
     <span class="text-[13px] font-semibold">{{ t('capture.sortNow') }}</span>
     <BoxPicker v-model="box" :habit="isHabit" :testid="testid" />
   </div>
+  <!-- Focus · Top · Remind: one row of switches; the options of the ones that are on open below -->
+  <div class="grid gap-2" :class="isHabit ? 'grid-cols-2' : 'grid-cols-3'">
+    <button
+      v-for="c in chips"
+      :key="c.key"
+      type="button"
+      role="switch"
+      :aria-checked="c.on"
+      :aria-label="c.aria"
+      class="flex h-[68px] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl border bg-white px-1"
+      :class="c.on ? `border-2 ${c.border}` : 'border-edge'"
+      :data-testid="id(c.key)"
+      @click="c.toggle()"
+    >
+      <span class="flex size-7 shrink-0 items-center justify-center rounded-full" :class="c.on ? `${c.fill} text-white` : 'border border-edge text-soft'">
+        <UIcon :name="c.on ? 'i-lucide-check' : c.icon" class="size-4" />
+      </span>
+      <span class="max-w-full truncate whitespace-nowrap text-[13px] font-medium text-ink">{{ c.label }}</span>
+    </button>
+  </div>
+  <FocusTimePicker v-if="sessionMin" v-model="sessionMin" :testid="testid" />
+  <div v-if="remind" class="flex flex-col gap-2">
+    <span class="flex items-center gap-1.5 text-[13px] font-semibold"><UIcon name="i-lucide-alarm-clock" class="size-4" />{{ t('capture.remind') }}</span>
+    <ReminderWhen v-model:date="remDate" v-model:time="remTime" v-model:alert-before="remAlert" />
+  </div>
+
   <RepeatPicker v-model:type="repeatType" v-model:days="days" />
-  <button
-    type="button"
-    role="switch"
-    :aria-checked="!!sessionMin"
-    class="flex min-h-[48px] items-center gap-3 rounded-2xl border bg-white px-3.5 text-left"
-    :class="sessionMin ? 'border-2 border-brand' : 'border-edge'"
-    :data-testid="id('focus')"
-    @click="toggleFocus"
-  >
-    <span class="flex size-7 shrink-0 items-center justify-center rounded-full" :class="sessionMin ? 'bg-brand text-white' : 'border border-edge text-soft'">
-      <UIcon name="i-lucide-timer" class="size-4" />
-    </span>
-    <span class="grow text-[14px] font-medium text-ink">{{ t('focusTime.label') }}</span>
-    <span v-if="sessionMin" class="shrink-0 whitespace-nowrap text-[13px] text-soft">{{ t('common.min', { n: sessionMin }) }}</span>
-    <UIcon v-if="sessionMin" name="i-lucide-check" class="size-5 shrink-0 text-brand" />
-  </button>
-  <FocusTimePicker v-if="sessionMin" v-model="sessionMin" bare :testid="testid" />
-
-  <button
-    v-if="!isHabit"
-    type="button"
-    role="switch"
-    :aria-checked="addTop"
-    class="flex min-h-[48px] items-center gap-3 rounded-2xl border bg-white px-3.5 text-left"
-    :class="addTop ? 'border-2 border-brand' : 'border-edge'"
-    :data-testid="id('top')"
-    @click="toggleTop"
-  >
-    <span class="flex size-7 shrink-0 items-center justify-center rounded-full" :class="addTop ? 'bg-brand text-white' : 'border border-edge text-soft'">
-      <UIcon name="i-lucide-star" class="size-4" />
-    </span>
-    <span class="grow text-[14px] font-medium text-ink">{{ t('task.addTop3', { top: topN }) }}</span>
-    <UIcon v-if="addTop" name="i-lucide-check" class="size-5 shrink-0 text-brand" />
-  </button>
-
-  <button
-    type="button"
-    role="switch"
-    :aria-checked="remind"
-    class="flex min-h-[48px] items-center gap-3 rounded-2xl border bg-white px-3.5 text-left"
-    :class="remind ? 'border-2 border-rem' : 'border-edge'"
-    :data-testid="id('remind')"
-    @click="remind = !remind"
-  >
-    <span class="flex size-7 shrink-0 items-center justify-center rounded-full" :class="remind ? 'bg-rem text-white' : 'border border-edge text-soft'">
-      <UIcon name="i-lucide-alarm-clock" class="size-4" />
-    </span>
-    <span class="grow text-[14px] font-medium text-ink">{{ t('capture.remind') }}</span>
-    <UIcon v-if="remind" name="i-lucide-check" class="size-5 shrink-0 text-rem" />
-  </button>
-  <ReminderWhen v-if="remind" v-model:date="remDate" v-model:time="remTime" v-model:alert-before="remAlert" />
 </template>

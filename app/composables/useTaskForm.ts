@@ -128,7 +128,7 @@ export function useTaskForm() {
   /** Label of the Save button: where the task will go. */
   const saveLabel = computed(() => isHabit.value
     ? t('capture.saveHabit')
-    : effectiveBox.value ? t('capture.saveTo', { name: t(`box.${effectiveBox.value}`) }) : t('capture.save'))
+    : effectiveBox.value ? t('capture.saveTo', { name: t(`box.${effectiveBox.value}`) }) : t('common.save'))
 
   return { form, isHabit, toTop, effectiveBox, canSave, reset, load, valid, apply, saveLabel }
 }

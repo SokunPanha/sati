@@ -15,20 +15,21 @@ function pick(b: Box) {
 
 <template>
   <div class="flex flex-col gap-1.5">
-    <div class="grid grid-cols-2 gap-2" role="radiogroup" :aria-label="t('box.pick')">
+    <div class="grid grid-cols-4 gap-1.5" role="radiogroup" :aria-label="t('box.pick')">
       <button
         v-for="b in BOXES"
         :key="b"
         type="button"
         role="radio"
         :aria-checked="model === b"
-        class="flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border-2 px-2 text-[14px] font-semibold"
+        class="flex h-11 min-w-0 items-center justify-center rounded-xl border-2 px-0.5 text-[12px]"
+        :class="model === b ? 'font-bold' : 'font-semibold'"
         :style="{ background: BOX_STYLES[b].bg, color: BOX_STYLES[b].tx, borderColor: model === b ? BOX_STYLES[b].solid : 'transparent' }"
+        :aria-label="t(`box.${b}`)"
         :data-testid="`${testid}-box-${b}`"
         @click="pick(b)"
       >
-        <UIcon v-if="model === b" name="i-lucide-check" class="size-4 shrink-0" />
-        <span class="truncate">{{ t(`box.${b}`) }}</span>
+        <span class="truncate whitespace-nowrap" data-box-label>{{ t(`boxShort.${b}`) }}</span>
       </button>
     </div>
     <span class="min-h-[18px] px-1 text-[12px] text-soft" :data-testid="`${testid}-result`" :data-box="model ?? ''">
