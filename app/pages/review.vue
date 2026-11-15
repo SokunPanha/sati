@@ -44,10 +44,7 @@ async function add(task: Task) {
 <template>
   <div data-testid="page-review" style="padding-bottom: calc(110px + env(safe-area-inset-bottom))">
     <div class="relative flex flex-col gap-0.5 px-[22px] pt-7">
-      <NuxtLink to="/history" class="absolute right-[22px] top-6 flex h-11 items-center gap-1.5 rounded-full border border-edge bg-white px-3.5 text-[13px] font-semibold text-ink" data-testid="to-history">
-        <UIcon name="i-lucide-calendar" class="size-4" />{{ t('review.history') }}
-      </NuxtLink>
-      <span class="pr-28 text-[13px] font-medium text-soft" data-testid="review-today">{{ todayLine }}</span>
+      <span class="text-[13px] font-medium text-soft" data-testid="review-today">{{ todayLine }}</span>
       <h1 class="display m-0 text-[34px] font-bold">{{ t('review.title') }}</h1>
     </div>
 

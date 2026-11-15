@@ -1,5 +1,5 @@
 import Dexie, { liveQuery, type Table } from 'dexie'
-import type { AppNotification, FocusSession, HistoryEvent, Profile, Reminder, RoutineLog, Task } from '~/types'
+import type { AppNotification, FocusSession, HistoryEvent, MindMap, Profile, Reminder, RoutineLog, Task } from '~/types'
 
 /** Meta database: the list of profiles and which one is active. */
 export class MetaDb extends Dexie {
@@ -23,6 +23,7 @@ export class ProfileDb extends Dexie {
   events!: Table<HistoryEvent, string>
   /** scheduler de-duplication: one row per alert already delivered */
   fired!: Table<{ key: string, at: number }, string>
+  mindmaps!: Table<MindMap, string>
 
   constructor(profileId: string) {
     super(profileDbName(profileId))
@@ -36,10 +37,12 @@ export class ProfileDb extends Dexie {
       events: 'id, date, type',
       fired: 'key, at'
     })
+    // v2 only adds a table: existing tables and their rows are kept as they are.
+    this.version(2).stores({ mindmaps: 'id, updatedAt' })
   }
 }
 
-export const PROFILE_TABLES = ['tasks', 'sessions', 'routineLogs', 'reminders', 'notifications', 'settings', 'events', 'fired'] as const
+export const PROFILE_TABLES = ['tasks', 'sessions', 'routineLogs', 'reminders', 'notifications', 'settings', 'events', 'fired', 'mindmaps'] as const
 
 export function profileDbName(id: string) {
   return `sati-p-${id}`

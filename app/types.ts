@@ -124,6 +124,16 @@ export interface HistoryEvent {
   toDate?: string
 }
 
+/** A mind map (Mind Elixir data). Its title is the root idea. */
+export interface MindMap {
+  id: string
+  title: string
+  /** MindElixirData as plain JSON */
+  data: any
+  createdAt: number
+  updatedAt: number
+}
+
 export interface NotifSettings {
   morning: boolean
   morningTime: string

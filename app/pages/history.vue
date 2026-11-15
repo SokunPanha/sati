@@ -137,12 +137,13 @@ const dayTitle = (day: string) => day === runtime.today ? `${t('common.today')} 
 </script>
 
 <template>
-  <div class="flex flex-col gap-[18px] px-[22px] pb-10 pt-4" data-testid="page-history">
-    <PageHeader :title="t('history.title')" back="/review">
-      <button type="button" class="flex h-11 items-center gap-1.5 rounded-[10px] border bg-white px-3 text-[13px] font-medium text-ink" :class="filtered ? 'border-brand' : 'border-edge'" :aria-expanded="showFilter" data-testid="history-filter" @click="showFilter = !showFilter">
+  <div class="flex flex-col gap-[18px] px-[22px] pt-7" style="padding-bottom: calc(120px + env(safe-area-inset-bottom))" data-testid="page-history">
+    <header class="flex items-end justify-between gap-3">
+      <h1 class="display m-0 min-w-0 truncate text-[34px] font-bold">{{ t('history.title') }}</h1>
+      <button type="button" class="flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] border bg-white px-3 text-[13px] font-medium text-ink" :class="filtered ? 'border-brand' : 'border-edge'" :aria-expanded="showFilter" data-testid="history-filter" @click="showFilter = !showFilter">
         <UIcon name="i-lucide-funnel" class="size-4" />{{ t('history.filter') }}
       </button>
-    </PageHeader>
+    </header>
 
     <div v-if="showFilter" class="card flex flex-col gap-3 p-3">
       <div class="flex flex-wrap gap-1.5">
@@ -223,5 +224,7 @@ const dayTitle = (day: string) => day === runtime.today ? `${t('common.today')} 
         <div v-if="d.foot" class="py-3 text-[14px] text-soft" :class="d.entries.length ? 'border-t border-rule2' : ''">{{ d.foot }}</div>
       </div>
     </section>
+
+    <TabBar />
   </div>
 </template>

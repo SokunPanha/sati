@@ -47,6 +47,8 @@ export async function restoreBackup(file: BackupFile): Promise<number> {
     const db = profileDb(id)
     await db.transaction('rw', db.tables, async () => {
       for (const name of PROFILE_TABLES) {
+        // an older backup has no table added later (e.g. mindmaps): keep what is on the device
+        if (!(name in entry.data)) continue
         const table = db.table(name)
         await table.clear()
         const rows = entry.data[name]
